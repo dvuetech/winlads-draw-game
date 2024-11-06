@@ -192,13 +192,13 @@ export default class MainScene extends Phaser.Scene {
         "vo-games",
       ];
       this.description = [
-        "100.000",
-        "670.000",
-        "50.000",
-        "Voucher PLN",
-        "Voucher Pulsa",
-        "Paket Data",
-        "Voucher Games",
+        "Panduka",
+        "Naveen",
+        "Ranmal",
+        "Pasan",
+        "Namesh",
+        "Nimesh",
+        "Malki",
       ];
       const rand = Phaser.Math.Between(0, 6);
 
@@ -261,7 +261,7 @@ export default class MainScene extends Phaser.Scene {
     this.listGifts.forEach((item: string, index: number) => {
       const newList = this.listGetGifts
         .create(this.cameras.main.width / 2, index * 40 + 260, item)
-        .setScale(0.35)
+        .setScale(this.SIZE)
         .setVisible(true)
         .setDepth(110);
     });
