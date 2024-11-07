@@ -31,20 +31,20 @@ export default class MainScene extends Phaser.Scene {
   isGravity!: any;
   key!: Array<string>;
   description!: Array<string>;
-  heightRand: any;
+  heightToIgnoreTheBall: any = 1;
   listGifts!: Array<string>;
   listGetGifts!: Phaser.GameObjects.Group;
 
   backsound!: any;
   congratsound!: any;
   movelr!: Phaser.Sound.BaseSound;
-  moveUpDown!: Phaser.Sound.BaseSound;
+  moveUpDownSound!: Phaser.Sound.BaseSound;
   fall!: Phaser.Sound.BaseSound;
 
   keyL!: Phaser.Input.Keyboard.Key;
   keyR!: Phaser.Input.Keyboard.Key;
   keyD!: Phaser.Input.Keyboard.Key;
-  OBJECT_COUNT = 30;
+  OBJECT_COUNT = 40;
   SIZE = 0.2;
 
   constructor() {
@@ -60,7 +60,8 @@ export default class MainScene extends Phaser.Scene {
     this.isGrab = false;
     this.isPlayMusic = true;
     this.isGravity = Phaser.Math.Between(0, 1);
-    this.heightRand = Phaser.Math.Between(210, 250);
+    // this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
+    this.heightToIgnoreTheBall = 1;
     this.listGifts = [];
 
     this.text1 = this.add
@@ -94,7 +95,7 @@ export default class MainScene extends Phaser.Scene {
     this.backsound = this.sound.add("bs", { loop: true, volume: 0.5 });
     this.backsound.play();
     this.movelr = this.sound.add("movelr", { loop: true });
-    this.moveUpDown = this.sound.add("moveupdown", { loop: true });
+    this.moveUpDownSound = this.sound.add("moveupdown", { loop: true });
     this.congratsound = this.sound.add("congratsound", { loop: false });
     this.fall = this.sound.add("fall", { loop: false, volume: 5 });
 
@@ -213,7 +214,7 @@ export default class MainScene extends Phaser.Scene {
             y: Phaser.Math.Between(200, 300),
           },
           // setScale: { x: 0.01, y: 0.01 },
-          customBoundsRectangle: new Phaser.Geom.Rectangle(24, 91, 328, 331),
+          customBoundsRectangle: new Phaser.Geom.Rectangle(29, 90, 323, 331), // Set boundaries
         });
         this.gifts.clear(true);
       }
@@ -232,7 +233,7 @@ export default class MainScene extends Phaser.Scene {
 
       // Enable circle collider for the round object
       newRound.body.setCircle(newRound.width / 2);
-      console.log("gifts", this.gifts);
+
       // Enable collision between objects in the group
       this.physics.add.collider(this.gifts, this.gifts);
     };
@@ -362,16 +363,15 @@ export default class MainScene extends Phaser.Scene {
   }
   buttonGrabOn() {
     if (this.claw.y == 200) {
-      console.log(this.heightRand);
       console.log(this.isGravity);
       this.buttonGrab.setScale(0.35, 0.3);
       this.claw.setVelocityY(this.speed * this.deltaTime);
-      this.moveUpDown.play();
+      this.moveUpDownSound.play();
     }
   }
   buttonGrabOff() {
     if (this.claw.y > 200) {
-      this.moveUpDown.play();
+      this.moveUpDownSound.play();
       this.buttonGrab.setScale(0.35);
     }
   }
@@ -401,14 +401,21 @@ export default class MainScene extends Phaser.Scene {
             // Code to execute when claw and object collide
             giftArr.push(imageObject);
             // console.log(giftArr.map((i) => i.name))
-            if (this.claw.y < this.heightRand && this.isGravity == 1) {
+            console.log({ isGravity: this.isGravity });
+            if (
+              false &&
+              this.claw.y < this.heightToIgnoreTheBall && // A ball which is in heightToIgnoreTheBall height will be ignored.
+              this.isGravity == 1
+            ) {
+              // Do not pick the ball
               this.fall.play();
-              this.moveUpDown.stop();
+              this.moveUpDownSound.stop();
               imageObject.body!.allowGravity = 1;
               // giftArr[0].setY(this.claw.y)
               giftArr[0].setY(this.claw.y + 20);
               giftArr[0].setX(this.claw.x);
             } else {
+              // Pick the ball
               this.claw.setVelocityY(-this.speed * delta);
               imageObject.body!.allowGravity = 0;
               giftArr[0].setY(this.claw.y);
@@ -420,7 +427,7 @@ export default class MainScene extends Phaser.Scene {
         if (imageObject.y > 100 && imageObject.y < 205) {
           console.log(`you get ${imageObject.name}!`);
           this.listGifts.push(`${imageObject.name}3`);
-          this.heightRand = Phaser.Math.Between(205, 300);
+          this.heightToIgnoreTheBall = Phaser.Math.Between(205, 300);
           imageObject.destroy();
           object.destroy();
           this.claw.setVelocityY(0);
@@ -469,15 +476,15 @@ export default class MainScene extends Phaser.Scene {
 
     if (this.claw.y >= 420) {
       this.claw.setVelocityY(-this.speed * delta);
-      this.moveUpDown.play();
+      this.moveUpDownSound.play();
     }
 
     if (this.claw.y < 200) {
-      this.moveUpDown.stop();
+      this.moveUpDownSound.stop();
       this.claw.setY(200);
       this.claw.setVelocity(0);
       this.isGravity = Phaser.Math.Between(0, 1);
-      this.heightRand = Phaser.Math.Between(210, 250);
+      this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
     }
   }
 }
