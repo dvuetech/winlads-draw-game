@@ -13,7 +13,7 @@ const Game = () => {
     if (!game) {
       const initPhaser = async () => {
         const PhaserGame = new Phaser.Game({
-          type: Phaser.AUTO,
+          type: Phaser.CANVAS,
           antialias: true,
           backgroundColor: "#ffffff",
           scale: {
@@ -22,6 +22,12 @@ const Game = () => {
             autoCenter: Phaser.Scale.CENTER_BOTH,
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
+          },
+          render: {
+            pixelArt: false, // Important! Set to false for smooth graphics
+            roundPixels: false, // Set to false for smoother graphics
+            transparent: false,
+            antialias: true, // Additional antialiasing setting
           },
           scene: [PreloadScene, MainScene],
           physics: {

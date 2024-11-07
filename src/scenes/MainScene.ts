@@ -361,14 +361,98 @@ export default class MainScene extends Phaser.Scene {
       this.movelr.stop();
     }
   }
+  private moveDirection: "left" | "right" | "middle" = "right";
+  private isAutoMoving: boolean = false; // Add this flag
+
   buttonGrabOn() {
-    if (this.claw.y == 200) {
-      console.log(this.isGravity);
+    if (this.claw.y == 200 && !this.isAutoMoving) {
+      this.isAutoMoving = true;
       this.buttonGrab.setScale(0.35, 0.3);
-      this.claw.setVelocityY(this.speed * this.deltaTime);
       this.moveUpDownSound.play();
+      this.startAutoMovement();
     }
   }
+
+  startAutoMovement() {
+    let xMovement: number;
+    const middleX = this.cameras.main.width / 2;
+
+    // Determine movement based on direction
+    switch (this.moveDirection) {
+      case "right":
+        xMovement = this.cameras.main.width - 100;
+        break;
+      case "left":
+        xMovement = 100;
+        break;
+      case "middle":
+        xMovement = middleX;
+        break;
+    }
+
+    // First move horizontally
+    this.tweens.add({
+      targets: this.claw,
+      x: xMovement,
+      duration: 1000,
+      ease: "Linear",
+      onStart: () => {
+        if (this.claw.x < xMovement) {
+          this.buttonRightOn();
+        } else {
+          this.buttonLeftOn();
+        }
+        this.movelr.play();
+      },
+      onComplete: () => {
+        this.buttonRightOff();
+        this.buttonLeftOff();
+        this.movelr.stop();
+
+        // Wait before grabbing
+        this.time.delayedCall(500, () => {
+          // Grab sequence
+          this.tweens.add({
+            targets: this.claw,
+            y: 420,
+            duration: 1000,
+            ease: "Linear",
+            onStart: () => {
+              this.moveUpDownSound.play();
+            },
+            onComplete: () => {
+              // Move back up
+              this.tweens.add({
+                targets: this.claw,
+                y: 200,
+                duration: 1000,
+                ease: "Linear",
+                onComplete: () => {
+                  this.moveUpDownSound.stop();
+                  this.buttonGrab.setScale(0.35);
+                  this.isAutoMoving = false; // Reset the flag
+
+                  // Update direction for next time
+                  switch (this.moveDirection) {
+                    case "right":
+                      this.moveDirection = "middle";
+                      break;
+                    case "middle":
+                      this.moveDirection = "left";
+                      break;
+                    case "left":
+                      this.moveDirection = "right";
+                      break;
+                  }
+                },
+              });
+            },
+          });
+        });
+      },
+    });
+  }
+
   buttonGrabOff() {
     if (this.claw.y > 200) {
       this.moveUpDownSound.play();
