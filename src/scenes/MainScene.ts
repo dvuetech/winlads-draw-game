@@ -55,10 +55,10 @@ export default class MainScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.cameras.main.setBackgroundColor(0xdcf3ff);
     // this.cameras.main.setBackgroundColor(0x213F63)
-    this.speed = 10;
+    this.speed = 8;
     this.tween = null;
     this.isGrab = false;
-    this.isPlayMusic = true;
+    this.isPlayMusic = false;
     this.isGravity = Phaser.Math.Between(0, 1);
     // this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
     this.heightToIgnoreTheBall = 1;
@@ -323,7 +323,6 @@ export default class MainScene extends Phaser.Scene {
       this.backsound.play();
       this.isPlayMusic = true;
     }
-    console.log(this.isPlayMusic);
   }
   buttonRightOn() {
     if (
@@ -394,7 +393,7 @@ export default class MainScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.claw,
       x: xMovement,
-      duration: 1000,
+      duration: 2000,
       ease: "Linear",
       onStart: () => {
         if (this.claw.x < xMovement) {
@@ -410,12 +409,12 @@ export default class MainScene extends Phaser.Scene {
         this.movelr.stop();
 
         // Wait before grabbing
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1000, () => {
           // Grab sequence
           this.tweens.add({
             targets: this.claw,
             y: 420,
-            duration: 1000,
+            duration: 4000,
             ease: "Linear",
             onStart: () => {
               this.moveUpDownSound.play();
@@ -425,7 +424,7 @@ export default class MainScene extends Phaser.Scene {
               this.tweens.add({
                 targets: this.claw,
                 y: 200,
-                duration: 1000,
+                duration: 4000,
                 ease: "Linear",
                 onComplete: () => {
                   this.moveUpDownSound.stop();
