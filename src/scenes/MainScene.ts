@@ -97,7 +97,7 @@ export default class MainScene extends Phaser.Scene {
     );
 
     this.backsound = this.sound.add("bs", { loop: true, volume: 0.5 });
-    this.backsound.play();
+    // this.backsound.play();
     this.movelr = this.sound.add("movelr", { loop: true });
     this.moveUpDownSound = this.sound.add("moveupdown", { loop: true });
     this.congratsound = this.sound.add("congratsound", { loop: false });
