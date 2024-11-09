@@ -1,3 +1,5 @@
+import { GiveawayEntry } from "@/models/giveaway-entries.model";
+
 export default class PreloadScene extends Phaser.Scene {
   loadingBar!: Phaser.GameObjects.Graphics;
   progressBar!: Phaser.GameObjects.Graphics;
@@ -5,10 +7,28 @@ export default class PreloadScene extends Phaser.Scene {
     super({ key: "PreloadScene" });
   }
 
-  preload() {
+  gameData: GiveawayEntry[] = [];
+
+  init() {
     this.cameras.main.setBackgroundColor(0x213f63);
     this.createLoadingBar();
 
+    // Prompt for JSON data before loading starts
+    try {
+      const jsonInput = window.prompt("Please paste your JSON array:", "[]");
+      if (jsonInput) {
+        this.gameData = JSON.parse(jsonInput);
+        // Store data in registry to access from other scenes
+        this.registry.set("importedData", this.gameData);
+      }
+    } catch (error) {
+      console.error("Invalid JSON format:", error);
+      this.gameData = []; // Use empty array if invalid input
+      this.registry.set("importedData", []);
+    }
+  }
+
+  preload() {
     this.load.on("progress", (value: number) => {
       console.log(value);
       this.progressBar.clear();
@@ -81,7 +101,6 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   create() {
-    
     this.scene.start("MainScene");
 
     /**

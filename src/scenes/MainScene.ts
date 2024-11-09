@@ -1,3 +1,4 @@
+import { GiveawayEntry } from "@/models/giveaway-entries.model";
 import { Physics } from "phaser";
 
 export default class MainScene extends Phaser.Scene {
@@ -30,7 +31,6 @@ export default class MainScene extends Phaser.Scene {
   isPlayMusic!: any;
   isGravity!: any;
   key!: Array<string>;
-  description!: Array<string>;
   heightToIgnoreTheBall: any = 1;
   listGifts!: Array<string>;
   listGetGifts!: Phaser.GameObjects.Group;
@@ -50,8 +50,12 @@ export default class MainScene extends Phaser.Scene {
   constructor() {
     super({ key: "MainScene" });
   }
+  giveawayEntries: GiveawayEntry[] = [];
 
   create() {
+    const entries = this.registry.get("importedData") as GiveawayEntry[];
+    console.log("Entries", entries);
+    this.giveawayEntries = [...entries];
     const cam = this.cameras.main;
     this.cameras.main.setBackgroundColor(0xdcf3ff);
     // this.cameras.main.setBackgroundColor(0x213F63)
@@ -192,15 +196,6 @@ export default class MainScene extends Phaser.Scene {
         "paket-data",
         "vo-games",
       ];
-      this.description = [
-        "Panduka",
-        "Naveen",
-        "Ranmal",
-        "Pasan",
-        "Namesh",
-        "Nimesh",
-        "Malki",
-      ];
       const rand = Phaser.Math.Between(0, 6);
 
       // Create a group if it doesn't exist
@@ -233,7 +228,7 @@ export default class MainScene extends Phaser.Scene {
 
       // Enable circle collider for the round object
       newRound.body.setCircle(newRound.width / 2);
-
+      newRound.body.setAllowGravity(true);
       // Enable collision between objects in the group
       this.physics.add.collider(this.gifts, this.gifts);
     };
@@ -369,7 +364,36 @@ export default class MainScene extends Phaser.Scene {
       this.buttonGrab.setScale(0.35, 0.3);
       this.moveUpDownSound.play();
       this.startAutoMovement();
+      this.chooseWinner();
     }
+  }
+  private shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Phaser.Math.Between(0, i);
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+  winner?: Promise<string>;
+  chooseWinner() {
+    this.winner = new Promise((resolve) => {
+      const array = this.giveawayEntries.flatMap((item) =>
+        Array(item.points).fill(item.name)
+      );
+      console.log("Before Shuffle", array);
+      this.shuffleArray(array);
+      console.log("After Shuffle", array);
+      const randomIndex = Phaser.Math.Between(0, array.length - 1);
+      const winner = array[randomIndex];
+      console.log("Before Update", this.giveawayEntries);
+      const entry = this.giveawayEntries.find((item) => item.name === winner);
+      if (entry) {
+        entry.points = entry.points - 1;
+      }
+      console.log("After Update", this.giveawayEntries);
+      resolve(winner);
+    });
   }
 
   startAutoMovement() {
@@ -477,7 +501,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.gifts) {
       // console.log(this.heightRand);
       // console.log(this.isGravity);
-      this.gifts.getChildren().forEach((object) => {
+      this.gifts.getChildren().forEach(async (object) => {
         const imageObject = object as any;
         if (this.claw.y > 201 && imageObject) {
           this.physics.overlap(this.claw, object, () => {
@@ -521,10 +545,8 @@ export default class MainScene extends Phaser.Scene {
             .setScale(0.2)
             .setDepth(101)
             .setVisible(true);
-
-          this.text2.setText(
-            this.description[this.key.indexOf(imageObject.name)]
-          );
+          const winner = await this.winner;
+          this.text2.setText(winner!);
           this.text2.setVisible(true);
 
           this.congrats.setVisible(true);
