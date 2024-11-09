@@ -278,6 +278,15 @@ export default class MainScene extends Phaser.Scene {
     this.buttonLeft.on("pointerup", this.buttonLeftOff, this);
     this.buttonGrab.on("pointerdown", this.buttonGrabOn, this);
     this.buttonGrab.on("pointerup", this.buttonGrabOff, this);
+    this.input.keyboard?.on("keydown-W", (event: KeyboardEvent) => {
+      if (event.ctrlKey) {
+        const winners = this.winners;
+        const winnersString = winners
+          .map((w) => `${w.name} (${w.email}) (${w.mobileNumber})`)
+          .join("\n");
+        if (winnersString?.length) alert(`Winners List:\n\n${winnersString}`);
+      }
+    });
   }
 
   buttonGiftOn() {
@@ -369,17 +378,18 @@ export default class MainScene extends Phaser.Scene {
   }
   private shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Phaser.Math.Between(0, i);
-        [array[i], array[j]] = [array[j], array[i]];
+      const j = Phaser.Math.Between(0, i);
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
+  }
 
-  winner?: Promise<string>;
+  winnerId?: Promise<string>;
+  winners: GiveawayEntry[] = [];
   chooseWinner() {
-    this.winner = new Promise((resolve) => {
+    this.winnerId = new Promise((resolve) => {
       const array = this.giveawayEntries.flatMap((item) =>
-        Array(item.points).fill(item.name)
+        Array(item.points).fill(item.userId)
       );
       console.log("Before Shuffle", array);
       this.shuffleArray(array);
@@ -387,7 +397,7 @@ export default class MainScene extends Phaser.Scene {
       const randomIndex = Phaser.Math.Between(0, array.length - 1);
       const winner = array[randomIndex];
       console.log("Before Update", this.giveawayEntries);
-      const entry = this.giveawayEntries.find((item) => item.name === winner);
+      const entry = this.giveawayEntries.find((item) => item.userId === winner);
       if (entry) {
         entry.points = entry.points - 1;
       }
@@ -482,6 +492,20 @@ export default class MainScene extends Phaser.Scene {
       this.buttonGrab.setScale(0.35);
     }
   }
+  private formatNameWithInitials(fullName: string): string {
+    const names = fullName.split(" ");
+
+    if (names.length === 1) return names[0];
+
+    // Keep first name and initialize others
+    const firstName = names[0];
+    const initials = names
+      .slice(1)
+      .map((name) => `${name[0]}.`)
+      .join(" ");
+
+    return `${firstName} ${initials}`;
+  }
 
   update(time: any, delta: number) {
     const giftArr: any = [];
@@ -545,8 +569,10 @@ export default class MainScene extends Phaser.Scene {
             .setScale(0.2)
             .setDepth(101)
             .setVisible(true);
-          const winner = await this.winner;
-          this.text2.setText(winner!);
+          const winner = await this.winnerId;
+          const entry = this.giveawayEntries.find((e) => e.userId === winner);
+          this.winners.push(entry!);
+          this.text2.setText(this.formatNameWithInitials(entry?.name!));
           this.text2.setVisible(true);
 
           this.congrats.setVisible(true);
