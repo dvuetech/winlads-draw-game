@@ -278,11 +278,13 @@ export default class MainScene extends Phaser.Scene {
     this.buttonLeft.on("pointerup", this.buttonLeftOff, this);
     this.buttonGrab.on("pointerdown", this.buttonGrabOn, this);
     this.buttonGrab.on("pointerup", this.buttonGrabOff, this);
-    this.input.keyboard?.on("keydown-W", (event: KeyboardEvent) => {
-      if (event.ctrlKey) {
+    window.addEventListener("keydown", (event: KeyboardEvent) => {
+      console.log("event", event.key);
+      if (event.ctrlKey && event.key.toLowerCase() === "u") {
         const winners = this.winners;
         const winnersString = winners
-          .map((w) => `${w.name} (${w.email}) (${w.mobileNumber})`)
+          .filter((w) => w?.userId)
+          .map((w) => `* ${w.name} (${w.email}) (${w.mobileNumber})`)
           .join("\n");
         if (winnersString?.length) alert(`Winners List:\n\n${winnersString}`);
       }
@@ -493,6 +495,7 @@ export default class MainScene extends Phaser.Scene {
     }
   }
   private formatNameWithInitials(fullName: string): string {
+    if (!fullName) return "";
     const names = fullName.split(" ");
 
     if (names.length === 1) return names[0];
@@ -506,6 +509,8 @@ export default class MainScene extends Phaser.Scene {
 
     return `${firstName} ${initials}`;
   }
+
+  private currentGift: any = null; // Add this property to track current gift
 
   update(time: any, delta: number) {
     const giftArr: any = [];
@@ -527,6 +532,7 @@ export default class MainScene extends Phaser.Scene {
       // console.log(this.isGravity);
       this.gifts.getChildren().forEach(async (object) => {
         const imageObject = object as any;
+        this.currentGift = imageObject;
         if (this.claw.y > 201 && imageObject) {
           this.physics.overlap(this.claw, object, () => {
             // Code to execute when claw and object collide
@@ -555,6 +561,15 @@ export default class MainScene extends Phaser.Scene {
           });
         }
 
+        // Check if gift is no longer overlapping
+        if (
+          this.currentGift &&
+          !this.physics.overlap(this.claw, this.currentGift)
+        ) {
+          // Gift has stopped colliding
+          this.currentGift.body!.allowGravity = 1;
+          this.currentGift = null; // Clear reference
+        }
         if (imageObject.y > 100 && imageObject.y < 205) {
           console.log(`you get ${imageObject.name}!`);
           this.listGifts.push(`${imageObject.name}3`);
