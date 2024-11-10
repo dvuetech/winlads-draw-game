@@ -390,9 +390,12 @@ export default class MainScene extends Phaser.Scene {
   winners: GiveawayEntry[] = [];
   chooseWinner() {
     this.winnerId = new Promise((resolve) => {
-      const array = this.giveawayEntries.flatMap((item) =>
-        Array(item.points).fill(item.userId)
-      );
+      const array = this.giveawayEntries.flatMap((item) => {
+        if (!this.winners.some(winner => winner.userId === item.userId)) {
+          return Array(item.points).fill(item.userId);
+        }
+        return [];
+      });
       console.log("Before Shuffle", array);
       this.shuffleArray(array);
       console.log("After Shuffle", array);
