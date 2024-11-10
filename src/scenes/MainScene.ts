@@ -507,10 +507,10 @@ export default class MainScene extends Phaser.Scene {
     const firstName = names[0];
     const initials = names
       .slice(1)
-      .map((name) => `${name[0]}.`)
+      .map((name) => `${name?.[0] ?? ''}.`)
       .join(" ");
 
-    return `${firstName} ${initials}`;
+    return `${firstName} ${initials ?? ''}`;
   }
 
   private currentGift: any = null; // Add this property to track current gift
