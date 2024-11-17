@@ -3,12 +3,14 @@ import Phaser, { Game as GameType } from "phaser";
 import { useEffect, useState } from "react";
 import PreloadScene from "./scenes/preloadScene";
 import MainScene from "./scenes/MainScene";
+import { GameDataAdmin } from "./models/game-data.model";
 
 const DEFAULT_WIDTH = 375;
 const DEFAULT_HEIGHT = 667;
 
 const Game = () => {
   const [game, setGame] = useState<GameType>();
+
   useEffect(() => {
     if (!game) {
       const initPhaser = async () => {
@@ -48,6 +50,7 @@ const Game = () => {
       initPhaser();
     }
   }, [game]);
+
   return <div id="phaser-game" key={"phaser-game"}></div>;
 };
 export default Game;

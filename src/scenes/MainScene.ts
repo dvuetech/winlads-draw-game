@@ -1,4 +1,8 @@
-import { GiveawayEntry } from "@/models/giveaway-entries.model";
+import {
+  EntryBalanceCombinedDto,
+  GameDataAdmin,
+} from "@/models/game-data.model";
+import axios from "axios";
 import { Physics } from "phaser";
 
 export default class MainScene extends Phaser.Scene {
@@ -15,7 +19,7 @@ export default class MainScene extends Phaser.Scene {
   // buttonBack!: Phaser.GameObjects.Image
   buttonGift!: Phaser.GameObjects.Image;
   buttonOk!: Phaser.GameObjects.Image;
-  buttonKembali!: Phaser.GameObjects.Image;
+  buttonDoneWinner!: Phaser.GameObjects.Image;
   claw!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   clawCenter!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   lever!: Phaser.GameObjects.Image;
@@ -50,12 +54,16 @@ export default class MainScene extends Phaser.Scene {
   constructor() {
     super({ key: "MainScene" });
   }
-  giveawayEntries: GiveawayEntry[] = [];
+
+  gameData?: GameDataAdmin;
+
+  get giveawayEntries() {
+    return this.gameData?.entries ?? [];
+  }
 
   create() {
-    const entries = this.registry.get("importedData") as GiveawayEntry[];
-    console.log("Entries", entries);
-    this.giveawayEntries = [...entries];
+    this.gameData = this.registry.get("importedData") as GameDataAdmin;
+    console.log("gameData", this.gameData);
     const cam = this.cameras.main;
     this.cameras.main.setBackgroundColor(0xdcf3ff);
     // this.cameras.main.setBackgroundColor(0x213F63)
@@ -163,13 +171,13 @@ export default class MainScene extends Phaser.Scene {
       .setDepth(102)
       .setVisible(false)
       .setInteractive();
-    this.buttonKembali = this.add
+    this.buttonDoneWinner = this.add
       .image(190, 470, "kembali")
       .setScale(0.1)
       .setDepth(102)
       .setVisible(false)
       .setInteractive();
-    // this.buttonKembali = this.add.image(cam.width / 2, 270, 'gold3')
+    // this.buttonDoneWinner = this.add.image(cam.width / 2, 270, 'gold3')
     //     .setScale(0.1)
     //     .setDepth(102)
     //     .setVisible(false)
@@ -269,7 +277,7 @@ export default class MainScene extends Phaser.Scene {
   setupInputListeners() {
     this.buttonGift.on("pointerdown", this.buttonGiftOn, this);
     this.buttonGift.on("pointerdown", this.listGiftsGroup, this);
-    this.buttonKembali.on("pointerdown", this.buttonKembaliOn, this);
+    this.buttonDoneWinner.on("pointerdown", this.buttonDoneWinnerOn, this);
     this.buttonOk.on("pointerdown", this.buttonOkOn, this);
     // this.buttonMusic.on('pointerdown', this.buttonMusicOn, this);
     this.buttonRight.on("pointerdown", this.buttonRightOn, this);
@@ -293,10 +301,10 @@ export default class MainScene extends Phaser.Scene {
 
   buttonGiftOn() {
     this.getGift.setVisible(true);
-    this.buttonKembali.setVisible(true);
+    this.buttonDoneWinner.setVisible(true);
     // this.listGetGifts.setVisible(true)
     this.tween = this.tweens.add({
-      targets: [this.getGift, this.buttonKembali, this.listGetGifts],
+      targets: [this.getGift, this.buttonDoneWinner, this.listGetGifts],
       scaleX: 0.35,
       scaleY: 0.35,
       duration: 1000,
@@ -304,14 +312,16 @@ export default class MainScene extends Phaser.Scene {
       repeat: 0,
     });
   }
-  buttonKembaliOn() {
-    this.buttonKembali.setVisible(false);
+  buttonDoneWinnerOn() {
+    this.buttonDoneWinner.setVisible(false);
     this.getGift.setVisible(false);
     this.listGetGifts.setVisible(false);
     this.listGetGifts.scaleXY(0.1);
-    this.buttonKembali.setScale(0.1);
+    this.buttonDoneWinner.setScale(0.1);
     this.getGift.setScale(0.1);
+    this.submitData();
   }
+
   buttonOkOn() {
     this.buttonOk.setVisible(false);
     this.congrats.setVisible(false);
@@ -320,7 +330,37 @@ export default class MainScene extends Phaser.Scene {
     this.buttonOk.setScale(0.1);
     this.congrats.setScale(0.1);
     this.congratsGift.setVisible(false);
+
   }
+
+  async submitData() {
+    debugger;
+    if (this.winners.length > 0) {
+      if (this.gameData) {
+        const data = axios.post(
+          this.gameData!.winnerSubmitUrl,
+          {
+            giveawayId: this.gameData!.giveawayId,
+            winnerUserIds: this.winners.map((winner) => winner.userId),
+            entries: this.gameData!.entries,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${this.gameData!.accessToken}`,
+            },
+          }
+        )
+        await Promise.all(
+          this.winners.map((winner) => {
+            ;
+            return data;
+          })
+        );
+        alert("Data submitted");
+      }
+    }
+  }
+
   buttonMusicOn() {
     if (this.isPlayMusic === true) {
       this.backsound.stop();
@@ -387,11 +427,11 @@ export default class MainScene extends Phaser.Scene {
   }
 
   winnerId?: Promise<string>;
-  winners: GiveawayEntry[] = [];
+  winners: EntryBalanceCombinedDto[] = [];
   chooseWinner() {
     this.winnerId = new Promise((resolve) => {
       const array = this.giveawayEntries.flatMap((item) => {
-        if (!this.winners.some(winner => winner.userId === item.userId)) {
+        if (!this.winners.some((winner) => winner.userId === item.userId)) {
           return Array(item.points).fill(item.userId);
         }
         return [];
@@ -507,10 +547,10 @@ export default class MainScene extends Phaser.Scene {
     const firstName = names[0];
     const initials = names
       .slice(1)
-      .map((name) => `${name?.[0] ?? ''}.`)
+      .map((name) => `${name?.[0] ?? ""}.`)
       .join(" ");
 
-    return `${firstName} ${initials ?? ''}`;
+    return `${firstName} ${initials ?? ""}`;
   }
 
   private currentGift: any = null; // Add this property to track current gift
@@ -540,8 +580,7 @@ export default class MainScene extends Phaser.Scene {
           this.physics.overlap(this.claw, object, () => {
             // Code to execute when claw and object collide
             giftArr.push(imageObject);
-            // console.log(giftArr.map((i) => i.name))
-            console.log({ isGravity: this.isGravity });
+            // console.log(giftArr.map((i) => i.name)) 
             if (
               false &&
               this.claw.y < this.heightToIgnoreTheBall && // A ball which is in heightToIgnoreTheBall height will be ignored.

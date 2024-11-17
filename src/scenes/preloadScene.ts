@@ -1,4 +1,4 @@
-import { GiveawayEntry } from "@/models/giveaway-entries.model";
+import { GameDataAdmin } from "@/models/game-data.model";
 
 export default class PreloadScene extends Phaser.Scene {
   loadingBar!: Phaser.GameObjects.Graphics;
@@ -7,7 +7,7 @@ export default class PreloadScene extends Phaser.Scene {
     super({ key: "PreloadScene" });
   }
 
-  gameData: GiveawayEntry[] = [];
+  gameData?: GameDataAdmin;
 
   init() {
     this.cameras.main.setBackgroundColor(0x213f63);
@@ -15,17 +15,14 @@ export default class PreloadScene extends Phaser.Scene {
 
     // Prompt for JSON data before loading starts
     try {
-      const jsonInput = window.prompt("Please paste your JSON array:", "[]");
-      if (jsonInput) {
-        this.gameData = JSON.parse(jsonInput);
-        // Store data in registry to access from other scenes
-        this.registry.set("importedData", this.gameData);
-      }
-    } catch (error) {
-      console.error("Invalid JSON format:", error);
-      this.gameData = []; // Use empty array if invalid input
-      this.registry.set("importedData", []);
-    }
+      const handleMessage = (event: MessageEvent) => {
+        const data = event.data;
+        if (data.type === "DRAW_GIVEAWAY") {
+          this.registry.set("importedData", data);
+        }
+      };
+      window.addEventListener("message", handleMessage);
+    } catch (error) {}
   }
 
   preload() {
