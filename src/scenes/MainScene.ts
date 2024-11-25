@@ -127,14 +127,14 @@ export default class MainScene extends Phaser.Scene {
     //     .setDepth(100)
     this.machine = this.add
       .image(cam.width / 2, cam.height / 2, "machine")
-      .setScale(0.35);
+      .setScale(1);
     this.bgMachine = this.add
       .image(cam.width / 2, cam.height / 2, "bg-machine")
-      .setScale(0.35)
+      .setScale(1)
       .setDepth(-100);
     this.buttonRight = this.add
       .image(305, 520, "buttonR")
-      .setScale(0.35)
+      .setScale(1)
       .setOrigin(0.5, 1)
       .setInteractive();
     this.buttonGrab = this.add
