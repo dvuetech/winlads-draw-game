@@ -1,4 +1,3 @@
-// current file
 import {
   EntryBalanceCombinedDto,
   GameDataAdmin,
@@ -50,7 +49,7 @@ export default class MainScene extends Phaser.Scene {
   keyR!: Phaser.Input.Keyboard.Key;
   keyD!: Phaser.Input.Keyboard.Key;
   OBJECT_COUNT = 40;
-  SIZE = 0.6;
+  SIZE = 0.2;
 
   constructor() {
     super({ key: "MainScene" });
@@ -68,30 +67,30 @@ export default class MainScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.cameras.main.setBackgroundColor(0xdcf3ff);
     // this.cameras.main.setBackgroundColor(0x213F63)
-    this.speed = 24;
+    this.speed = 8;
     this.tween = null;
     this.isGrab = false;
     this.isPlayMusic = false;
     this.isGravity = Phaser.Math.Between(0, 1);
     // this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
-    this.heightToIgnoreTheBall = 3;
+    this.heightToIgnoreTheBall = 1;
     this.listGifts = [];
 
     this.text1 = this.add
-      .text(50, 120, "", {
+      .text(26, 60, "", {
         color: "#000000",
         fontFamily: "Metropolis",
         fontSize: 12,
       })
       .setDepth(50);
     this.text2 = this.add
-      .text(540, 1000, "", {
+      .text(190, 360, "", {
         color: "#000000",
         fontFamily: "Metropolis",
-        fontSize: 48,
+        fontSize: 20,
       })
       .setOrigin(0.5)
-      .setScale(1.0)
+      .setScale(0.1)
       .setVisible(false)
       .setDepth(105);
 
@@ -114,12 +113,12 @@ export default class MainScene extends Phaser.Scene {
 
     this.congrats = this.add
       .image(cam.width / 2, cam.height / 2, "congrats")
-      .setScale(1.5)
+      .setScale(0.1)
       .setVisible(false)
       .setDepth(100);
     this.getGift = this.add
       .image(cam.width / 2, cam.height / 2, "get-gift")
-      .setScale(1.0)
+      .setScale(0.1)
       .setVisible(false)
       .setDepth(100);
     // this.getGift = this.add.image(cam.width / 2, cam.height / 2, 'gold3')
@@ -128,24 +127,24 @@ export default class MainScene extends Phaser.Scene {
     //     .setDepth(100)
     this.machine = this.add
       .image(cam.width / 2, cam.height / 2, "machine")
-      .setScale(1.0);
+      .setScale(1);
     this.bgMachine = this.add
       .image(cam.width / 2, cam.height / 2, "bg-machine")
       .setScale(1)
       .setDepth(-100);
     this.buttonRight = this.add
-      .image(880, 1500, "buttonR")
-      .setScale(1.0)
+      .image(305, 520, "buttonR")
+      .setScale(1)
       .setOrigin(0.5, 1)
       .setInteractive();
     this.buttonGrab = this.add
-      .image(540, 1530, "grab")
-      .setScale(1)
+      .image(190, 530, "grab")
+      .setScale(0.35)
       .setOrigin(0.5, 1)
       .setInteractive();
     this.buttonLeft = this.add
-      .image(200, 1500, "buttonL")
-      .setScale(1)
+      .image(70, 520, "buttonL")
+      .setScale(0.35)
       .setOrigin(0.5, 1)
       .setInteractive();
     // this.buttonMusic = this.add.image(340, 36, 'btn-music')
@@ -155,26 +154,26 @@ export default class MainScene extends Phaser.Scene {
     //     .setScale(0.35)
     //     .setInteractive()
     this.buttonGift = this.add
-      .image(150, 1800, "btn-gift")
-      .setScale(1.0)
+      .image(67, 630, "btn-gift")
+      .setScale(0.35)
       .setInteractive();
     this.displayGift = (key: string) => {
-      this.add.image(140, 1675, key).setScale(1);
+      this.add.image(67, 595, key).setScale(0.25);
     };
     this.congratsGift = this.add
-      .image(540, 860, "key")
-      .setScale(1.0)
+      .image(190, 300, "key")
+      .setScale(0.1)
       .setDepth(101)
       .setVisible(false);
     this.buttonOk = this.add
-      .image(550, 1370, "ok")
-      .setScale(1.0)
+      .image(190, 470, "ok")
+      .setScale(0.1)
       .setDepth(102)
       .setVisible(false)
       .setInteractive();
     this.buttonDoneWinner = this.add
-      .image(550, 1400, "kembali")
-      .setScale(1.0)
+      .image(190, 470, "kembali")
+      .setScale(0.1)
       .setDepth(102)
       .setVisible(false)
       .setInteractive();
@@ -184,15 +183,15 @@ export default class MainScene extends Phaser.Scene {
     //     .setVisible(false)
     //     .setInteractive()
     this.claw = this.physics.add
-      .image(cam.width / 2, 800, "claw")
+      .image(cam.width / 2, 200, "claw")
       .setScale(this.SIZE)
-      .setOrigin(0.5, 1.1)
+      .setOrigin(0.5, 1)
       .setDepth(-50);
     this.claw.body.allowGravity = false;
     this.claw.body.setCircle(
       this.claw.width / 5,
       this.claw.width / 3.5,
-      this.claw.height - 240
+      this.claw.height - 120
     );
 
     const randomRound = () => {
@@ -214,16 +213,11 @@ export default class MainScene extends Phaser.Scene {
           bounceY: 0.2,
           collideWorldBounds: true,
           setXY: {
-            x: Phaser.Math.Between(150, 930),
-            y: Phaser.Math.Between(600, 800),
+            x: Phaser.Math.Between(50, 300),
+            y: Phaser.Math.Between(200, 300),
           },
           // setScale: { x: 0.01, y: 0.01 },
-          customBoundsRectangle: new Phaser.Geom.Rectangle(
-            100, // Left boundary
-            200, // Top boundary
-            920, // Width of play area
-            1050 // Height of play area, // Set boundaries
-          ),
+          customBoundsRectangle: new Phaser.Geom.Rectangle(29, 90, 323, 331), // Set boundaries
         });
         this.gifts.clear(true);
       }
@@ -231,10 +225,9 @@ export default class MainScene extends Phaser.Scene {
       // Add a new round object to the group
       const newRound = this.gifts
         .create(
-          Phaser.Math.Between(150, cam.width - 150),
-          Phaser.Math.Between(1000, 1100),
+          Phaser.Math.Between(50, 300),
+          Phaser.Math.Between(310, 330),
           this.key[rand]
-          // this.key[Phaser.Math.Between(0, 6)]
         )
         .setScale(this.SIZE)
         .setVelocityY(this.speed);
@@ -262,7 +255,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.listGetGifts == null) {
       this.listGetGifts = this.add.group({
         key: this.listGifts[this.listGifts.length],
-        setScale: { x: 1.0 },
+        setScale: { x: 0.1 },
         setDepth: { z: 102 },
         visible: false,
       });
@@ -271,7 +264,7 @@ export default class MainScene extends Phaser.Scene {
     // const key = this.listGifts[lenght-1]
     this.listGifts.forEach((item: string, index: number) => {
       const newList = this.listGetGifts
-        .create(this.cameras.main.width / 2, index * 40 + 700, item)
+        .create(this.cameras.main.width / 2, index * 40 + 260, item)
         .setScale(this.SIZE)
         .setVisible(true)
         .setDepth(110);
@@ -312,8 +305,8 @@ export default class MainScene extends Phaser.Scene {
     // this.listGetGifts.setVisible(true)
     this.tween = this.tweens.add({
       targets: [this.getGift, this.buttonDoneWinner, this.listGetGifts],
-      scaleX: 1.0,
-      scaleY: 1.0,
+      scaleX: 0.35,
+      scaleY: 0.35,
       duration: 1000,
       ease: "Elastic",
       repeat: 0,
@@ -333,10 +326,11 @@ export default class MainScene extends Phaser.Scene {
     this.buttonOk.setVisible(false);
     this.congrats.setVisible(false);
     this.text2.setVisible(false);
-    this.text2.setScale(1.0);
-    this.buttonOk.setScale(1.0);
-    this.congrats.setScale(1.0);
+    this.text2.setScale(0.1);
+    this.buttonOk.setScale(0.1);
+    this.congrats.setScale(0.1);
     this.congratsGift.setVisible(false);
+
   }
 
   async submitData() {
@@ -355,9 +349,10 @@ export default class MainScene extends Phaser.Scene {
               Authorization: `Bearer ${this.gameData!.accessToken}`,
             },
           }
-        );
+        )
         await Promise.all(
           this.winners.map((winner) => {
+            ;
             return data;
           })
         );
@@ -376,30 +371,38 @@ export default class MainScene extends Phaser.Scene {
     }
   }
   buttonRightOn() {
-    if (this.claw.y == 800) {
+    if (
+      this.claw.y == 200 &&
+      this.claw.x < this.cameras.main.width - 25 &&
+      this.claw.x > 25
+    ) {
       this.claw.setVelocityX(this.speed * this.deltaTime);
-      this.buttonRight.setScale(1.0);
+      this.buttonRight.setScale(0.35, 0.3);
       this.movelr.play();
     }
   }
   buttonRightOff() {
-    if (this.claw.y == 800) {
+    if (this.claw.y == 200) {
       this.claw.setVelocityX(0);
-      this.buttonRight.setScale(1.0);
+      this.buttonRight.setScale(0.35);
       this.movelr.stop();
     }
   }
   buttonLeftOn() {
-    if (this.claw.y == 800) {
+    if (
+      this.claw.y == 200 &&
+      this.claw.x < this.cameras.main.width - 25 &&
+      this.claw.x > 25
+    ) {
       this.claw.setVelocityX(-this.speed * this.deltaTime);
-      this.buttonLeft.setScale(1.0);
+      this.buttonLeft.setScale(0.35, 0.3);
       this.movelr.play();
     }
   }
   buttonLeftOff() {
-    if (this.claw.y == 800) {
+    if (this.claw.y == 200) {
       this.claw.setVelocityX(0);
-      this.buttonLeft.setScale(1.0);
+      this.buttonLeft.setScale(0.35);
       this.movelr.stop();
     }
   }
@@ -407,9 +410,9 @@ export default class MainScene extends Phaser.Scene {
   private isAutoMoving: boolean = false; // Add this flag
 
   buttonGrabOn() {
-    if (this.claw.y == 800 && !this.isAutoMoving) {
+    if (this.claw.y == 200 && !this.isAutoMoving) {
       this.isAutoMoving = true;
-      this.buttonGrab.setScale(1.0, 1.0);
+      this.buttonGrab.setScale(0.35, 0.3);
       this.moveUpDownSound.play();
       this.startAutoMovement();
       this.chooseWinner();
@@ -455,10 +458,10 @@ export default class MainScene extends Phaser.Scene {
     // Determine movement based on direction
     switch (this.moveDirection) {
       case "right":
-        xMovement = this.cameras.main.width - 200;
+        xMovement = this.cameras.main.width - 100;
         break;
       case "left":
-        xMovement = 200;
+        xMovement = 100;
         break;
       case "middle":
         xMovement = middleX;
@@ -468,11 +471,16 @@ export default class MainScene extends Phaser.Scene {
     // First move horizontally
     this.tweens.add({
       targets: this.claw,
-      y: 1350,
+      x: xMovement,
       duration: 2000,
       ease: "Linear",
       onStart: () => {
-        this.moveUpDownSound.play();
+        if (this.claw.x < xMovement) {
+          this.buttonRightOn();
+        } else {
+          this.buttonLeftOn();
+        }
+        this.movelr.play();
       },
       onComplete: () => {
         this.buttonRightOff();
@@ -480,11 +488,11 @@ export default class MainScene extends Phaser.Scene {
         this.movelr.stop();
 
         // Wait before grabbing
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1000, () => {
           // Grab sequence
           this.tweens.add({
             targets: this.claw,
-            y: 800,
+            y: 420,
             duration: 4000,
             ease: "Linear",
             onStart: () => {
@@ -494,12 +502,12 @@ export default class MainScene extends Phaser.Scene {
               // Move back up
               this.tweens.add({
                 targets: this.claw,
-                y: 800,
-                duration: 400,
+                y: 200,
+                duration: 4000,
                 ease: "Linear",
                 onComplete: () => {
                   this.moveUpDownSound.stop();
-                  this.buttonGrab.setScale(1.0);
+                  this.buttonGrab.setScale(0.35);
                   this.isAutoMoving = false; // Reset the flag
 
                   // Update direction for next time
@@ -524,12 +532,9 @@ export default class MainScene extends Phaser.Scene {
   }
 
   buttonGrabOff() {
-    if (this.claw.y == 800 && !this.isAutoMoving) {
-      this.isAutoMoving = true;
-      this.buttonGrab.setScale(1.0);
+    if (this.claw.y > 200) {
       this.moveUpDownSound.play();
-      this.startAutoMovement();
-      this.chooseWinner();
+      this.buttonGrab.setScale(0.35);
     }
   }
   private formatNameWithInitials(fullName: string): string {
@@ -566,21 +571,35 @@ export default class MainScene extends Phaser.Scene {
     // ]);
 
     if (this.gifts) {
+      // console.log(this.heightRand);
+      // console.log(this.isGravity);
       this.gifts.getChildren().forEach(async (object) => {
         const imageObject = object as any;
         this.currentGift = imageObject;
-
-        if (this.claw.y > 801 && imageObject) {
+        if (this.claw.y > 201 && imageObject) {
           this.physics.overlap(this.claw, object, () => {
             // Code to execute when claw and object collide
             giftArr.push(imageObject);
-            // console.log(giftArr.map((i) => i.name))
-
-            // Enhanced physics
-            this.claw.setVelocityY(-this.speed * delta * 0.8); // Smoother movement
-            imageObject.body!.allowGravity = 0;
-            giftArr[0].setY(this.claw.y); // Adjusted position
-            giftArr[0].setX(this.claw.x);
+            // console.log(giftArr.map((i) => i.name)) 
+            if (
+              false &&
+              this.claw.y < this.heightToIgnoreTheBall && // A ball which is in heightToIgnoreTheBall height will be ignored.
+              this.isGravity == 1
+            ) {
+              // Do not pick the ball
+              this.fall.play();
+              this.moveUpDownSound.stop();
+              imageObject.body!.allowGravity = 1;
+              // giftArr[0].setY(this.claw.y)
+              giftArr[0].setY(this.claw.y + 20);
+              giftArr[0].setX(this.claw.x);
+            } else {
+              // Pick the ball
+              this.claw.setVelocityY(-this.speed * delta);
+              imageObject.body!.allowGravity = 0;
+              giftArr[0].setY(this.claw.y);
+              giftArr[0].setX(this.claw.x);
+            }
           });
         }
 
@@ -593,19 +612,18 @@ export default class MainScene extends Phaser.Scene {
           this.currentGift.body!.allowGravity = 1;
           this.currentGift = null; // Clear reference
         }
-
-        if (imageObject.y > 400 && imageObject.y < 500) {
+        if (imageObject.y > 100 && imageObject.y < 205) {
           console.log(`you get ${imageObject.name}!`);
           this.listGifts.push(`${imageObject.name}3`);
-          this.heightToIgnoreTheBall = Phaser.Math.Between(405, 500);
+          this.heightToIgnoreTheBall = Phaser.Math.Between(205, 300);
           imageObject.destroy();
           object.destroy();
           this.claw.setVelocityY(0);
-          this.claw.setY(800);
+          this.claw.setY(200);
           this.displayGift(imageObject.name);
           this.congratsGift = this.add
-            .image(this.cameras.main.width / 2 - 5, 800, `${imageObject.name}2`)
-            .setScale(1.0)
+            .image(this.cameras.main.width / 2 - 5, 285, `${imageObject.name}2`)
+            .setScale(0.2)
             .setDepth(101)
             .setVisible(true);
           const winner = await this.winnerId;
@@ -619,8 +637,8 @@ export default class MainScene extends Phaser.Scene {
           this.congratsound.play();
           this.tween = this.tweens.add({
             targets: [this.congrats, this.buttonOk, this.congratsGift],
-            scaleX: 1.0,
-            scaleY: 1.0,
+            scaleX: 0.35,
+            scaleY: 0.35,
             duration: 1000,
             ease: "Elastic",
             repeat: 0,
@@ -637,25 +655,21 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
-    if (this.claw.x <= 150) {
-      this.claw.setX(150);
-      this.claw.setVelocityX(0); // Stop movement at boundary
-      this.movelr.stop();
+    if (this.claw.x <= 50) {
+      this.claw.setX(50);
     }
-    if (this.claw.x >= 930) {
-      this.claw.setX(930);
-      this.claw.setVelocityX(0); // Stop movement at boundary
-      this.movelr.stop();
+    if (this.claw.x >= this.cameras.main.width - 50) {
+      this.claw.setX(this.cameras.main.width - 50);
     }
 
-    if (this.claw.y >= 1350) {
+    if (this.claw.y >= 420) {
       this.claw.setVelocityY(-this.speed * delta);
       this.moveUpDownSound.play();
     }
 
-    if (this.claw.y < 800) {
+    if (this.claw.y < 200) {
       this.moveUpDownSound.stop();
-      this.claw.setY(800);
+      this.claw.setY(200);
       this.claw.setVelocity(0);
       this.isGravity = Phaser.Math.Between(0, 1);
       this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
