@@ -30,11 +30,6 @@ const Game = () => {
             roundPixels: false, // Set to false for smoother graphics
             transparent: false,
             antialias: true, // Additional antialiasing setting
-            clearBeforeRender: true,
-            premultipliedAlpha: true,
-            preserveDrawingBuffer: true,
-            powerPreference: "high-performance",
-            batchSize: 4096,
           },
           scene: [PreloadScene, MainScene],
           physics: {
