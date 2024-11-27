@@ -323,9 +323,9 @@ export default class MainScene extends Phaser.Scene {
     this.buttonDoneWinner.setVisible(false);
     this.getGift.setVisible(false);
     this.listGetGifts.setVisible(false);
-    this.listGetGifts.scaleXY(0.1);
-    this.buttonDoneWinner.setScale(0.1);
-    this.getGift.setScale(0.1);
+    this.listGetGifts.scaleXY(1.0);
+    this.buttonDoneWinner.setScale(1.0);
+    this.getGift.setScale(1.0);
     this.submitData();
   }
 
@@ -468,23 +468,27 @@ export default class MainScene extends Phaser.Scene {
     // First move horizontally
     this.tweens.add({
       targets: this.claw,
-      y: 1350,
+      x: xMovement, // FIRST move horizontally (x)
       duration: 2000,
       ease: "Linear",
       onStart: () => {
-        this.moveUpDownSound.play();
+        if (this.claw.x < xMovement) {
+          this.buttonRightOn();
+        } else {
+          this.buttonLeftOn();
+        }
+        this.movelr.play();
       },
       onComplete: () => {
         this.buttonRightOff();
         this.buttonLeftOff();
         this.movelr.stop();
 
-        // Wait before grabbing
+        // THEN move vertically after horizontal movement is complete
         this.time.delayedCall(500, () => {
-          // Grab sequence
           this.tweens.add({
             targets: this.claw,
-            y: 800,
+            y: 1350, // Move down
             duration: 4000,
             ease: "Linear",
             onStart: () => {
@@ -494,13 +498,13 @@ export default class MainScene extends Phaser.Scene {
               // Move back up
               this.tweens.add({
                 targets: this.claw,
-                y: 800,
-                duration: 400,
+                y: 800, // Move back to starting position
+                duration: 4000,
                 ease: "Linear",
                 onComplete: () => {
                   this.moveUpDownSound.stop();
                   this.buttonGrab.setScale(1.0);
-                  this.isAutoMoving = false; // Reset the flag
+                  this.isAutoMoving = false;
 
                   // Update direction for next time
                   switch (this.moveDirection) {
@@ -524,12 +528,12 @@ export default class MainScene extends Phaser.Scene {
   }
 
   buttonGrabOff() {
-    if (this.claw.y == 800 && !this.isAutoMoving) {
-      this.isAutoMoving = true;
-      this.buttonGrab.setScale(1.0);
+    if (this.claw.y > 800) {
       this.moveUpDownSound.play();
-      this.startAutoMovement();
-      this.chooseWinner();
+      this.buttonGrab.setScale(1.0);
+      // this.moveUpDownSound.play();
+      // this.startAutoMovement();
+      // this.chooseWinner();
     }
   }
   private formatNameWithInitials(fullName: string): string {
@@ -570,19 +574,52 @@ export default class MainScene extends Phaser.Scene {
         const imageObject = object as any;
         this.currentGift = imageObject;
 
-        if (this.claw.y > 801 && imageObject) {
-          this.physics.overlap(this.claw, object, () => {
-            // Code to execute when claw and object collide
-            giftArr.push(imageObject);
-            // console.log(giftArr.map((i) => i.name))
+        // if (this.claw.y > 800 && imageObject) {
+        //   this.physics.overlap(this.claw, object, () => {
+        //     console.log("Claw Moved", this.claw.y);
+        //     // Code to execute when claw and object collide
+        //     giftArr.push(imageObject);
+        //     // console.log(giftArr.map((i) => i.name))
 
-            // Enhanced physics
-            this.claw.setVelocityY(-this.speed * delta * 0.8); // Smoother movement
-            imageObject.body!.allowGravity = 0;
-            giftArr[0].setY(this.claw.y); // Adjusted position
-            giftArr[0].setX(this.claw.x);
+        //     // Enhanced physics
+        //     this.claw.setVelocityY(-this.speed * delta); // Smoother movement
+        //     imageObject.body!.allowGravity = 0;
+        //     giftArr[0].setY(this.claw.y); // Adjusted position
+        //     giftArr[0].setX(this.claw.x);
+        //   });
+        // }
+
+        if (this.claw.y > 800 && imageObject) {
+          this.physics.overlap(this.claw, object, () => {
+            console.log("Claw Moved", this.claw.y);
+            giftArr.push(imageObject);
+            if (
+              this.claw.y < this.heightToIgnoreTheBall &&
+              this.isGravity == 1
+            ) {
+              this.fall.play();
+              this.moveUpDownSound.stop();
+              imageObject.body!.allowGravity = 1;
+              giftArr[0].setY(this.claw.y + 50);
+              giftArr[0].setX(this.claw.x);
+            } else {
+              // Pick up ball logic
+              this.claw.setVelocityY(-this.speed * delta);
+              imageObject.body!.allowGravity = 0;
+              giftArr[0].setY(this.claw.y + 20); // Keep consistent offset
+              giftArr[0].setX(this.claw.x);
+            }
           });
         }
+
+        // if (this.claw.y > 800 && imageObject) {
+        //   this.physics.overlap(this.claw, object, () => {
+        //     giftArr.push(imageObject);
+        //     imageObject.body!.allowGravity = 0;
+        //     giftArr[0].setY(this.claw.y + 50);  // Increased offset for new scale
+        //     giftArr[0].setX(this.claw.x);
+        //   });
+        // }
 
         // Check if gift is no longer overlapping
         if (
@@ -594,10 +631,10 @@ export default class MainScene extends Phaser.Scene {
           this.currentGift = null; // Clear reference
         }
 
-        if (imageObject.y > 400 && imageObject.y < 500) {
+        if (imageObject.y > 700 && imageObject.y < 800) {
           console.log(`you get ${imageObject.name}!`);
           this.listGifts.push(`${imageObject.name}3`);
-          this.heightToIgnoreTheBall = Phaser.Math.Between(405, 500);
+          this.heightToIgnoreTheBall = Phaser.Math.Between(805, 900);
           imageObject.destroy();
           object.destroy();
           this.claw.setVelocityY(0);
@@ -639,13 +676,13 @@ export default class MainScene extends Phaser.Scene {
 
     if (this.claw.x <= 150) {
       this.claw.setX(150);
-      this.claw.setVelocityX(0); // Stop movement at boundary
-      this.movelr.stop();
+      // this.claw.setVelocityX(0); // Stop movement at boundary
+      // this.movelr.stop();
     }
     if (this.claw.x >= 930) {
       this.claw.setX(930);
-      this.claw.setVelocityX(0); // Stop movement at boundary
-      this.movelr.stop();
+      // this.claw.setVelocityX(0); // Stop movement at boundary
+      // this.movelr.stop();
     }
 
     if (this.claw.y >= 1350) {
@@ -658,7 +695,7 @@ export default class MainScene extends Phaser.Scene {
       this.claw.setY(800);
       this.claw.setVelocity(0);
       this.isGravity = Phaser.Math.Between(0, 1);
-      this.heightToIgnoreTheBall = Phaser.Math.Between(210, 250);
+      this.heightToIgnoreTheBall = Phaser.Math.Between(810, 900);
     }
   }
 }
