@@ -209,7 +209,7 @@ export default class MainScene extends Phaser.Scene {
       .setDepth(-50);
     this.claw.body.allowGravity = false;
     const r = this.claw.width / 10;
-    this.claw.body.setCircle(r, this.claw.width / 2 - r, this.claw.height - 90);
+    this.claw.body.setCircle(r, this.claw.width / 2 - r, this.claw.height - 70);
     // this.physics.world.createDebugGraphic();
 
     const randomRound = () => {
@@ -311,7 +311,6 @@ export default class MainScene extends Phaser.Scene {
     this.buttonGrab.on("pointerdown", this.buttonGrabOn, this);
     this.buttonGrab.on("pointerup", this.buttonGrabOff, this);
     window.addEventListener("keydown", (event: KeyboardEvent) => {
-      console.log("event", event.key);
       if (event.ctrlKey && event.key.toLowerCase() === "u") {
         const winners = this.winners;
         const winnersString = winners
