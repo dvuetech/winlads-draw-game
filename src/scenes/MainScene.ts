@@ -559,7 +559,7 @@ export default class MainScene extends Phaser.Scene {
   }
   private formatNameWithInitials(fullName: string): string {
 
-    if (!fullName) return "Panduka Nandara";
+    if (!fullName) return "John D.";
     const names = fullName.split(" ");
 
     if (names.length === 1) return names[0];
