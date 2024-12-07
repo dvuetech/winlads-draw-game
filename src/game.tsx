@@ -5,8 +5,6 @@ import PreloadScene from "./scenes/preloadScene";
 import MainScene from "./scenes/MainScene";
 import { GameDataAdmin } from "./models/game-data.model";
 
-// const DEFAULT_WIDTH = 375;
-// const DEFAULT_HEIGHT = 667;
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1920;
 
@@ -32,11 +30,6 @@ const Game = () => {
             roundPixels: false, // Set to false for smoother graphics
             transparent: false,
             antialias: true, // Additional antialiasing setting
-            clearBeforeRender: true,
-            premultipliedAlpha: true,
-            preserveDrawingBuffer: true,
-            powerPreference: "high-performance",
-            batchSize: 4096,
           },
           scene: [PreloadScene, MainScene],
           physics: {
