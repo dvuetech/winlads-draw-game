@@ -12,22 +12,10 @@ export default class PreloadScene extends Phaser.Scene {
   init() {
     this.cameras.main.setBackgroundColor(0x213f63);
     this.createLoadingBar();
-
-    // Prompt for JSON data before loading starts
-    try {
-      const handleMessage = (event: MessageEvent) => {
-        const data = event.data;
-        if (data.type === "DRAW_GIVEAWAY") {
-          this.registry.set("importedData", data);
-        }
-      };
-      window.addEventListener("message", handleMessage);
-    } catch (error) {}
   }
 
   preload() {
     this.load.on("progress", (value: number) => {
-      console.log(value);
       this.progressBar.clear();
       this.progressBar.fillStyle(0xe7a630, 1);
       this.progressBar.fillRect(
@@ -45,7 +33,6 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.on("complete", () => {
       this.progressBar.destroy();
       this.loadingBar.destroy();
-      console.log("complete");
     });
 
     // CLAW MACHINE
@@ -99,7 +86,6 @@ export default class PreloadScene extends Phaser.Scene {
 
   create() {
     this.scene.start("MainScene");
-
     /**
      * This is how you would dynamically import the mainScene class (with code splitting),
      * add the mainScene to the Scene Manager
