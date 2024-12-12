@@ -10,9 +10,9 @@ const DEFAULT_HEIGHT = 1920;
 
 const Game = () => {
   const [game, setGame] = useState<GameType>();
-
+  const [data, setData] = useState<GameDataAdmin>();
   useEffect(() => {
-    if (!game) {
+    if (!game && data) {
       const initPhaser = async () => {
         const PhaserGame = new Phaser.Game({
           type: Phaser.CANVAS,
@@ -31,7 +31,7 @@ const Game = () => {
             transparent: false,
             antialias: true, // Additional antialiasing setting
           },
-          scene: [PreloadScene, MainScene],
+          scene: [PreloadScene, new MainScene({ gameData: data })],
           physics: {
             default: "arcade",
             arcade: {
@@ -49,7 +49,36 @@ const Game = () => {
       };
       initPhaser();
     }
-  }, [game]);
+  }, [game, data]);
+
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (data.type === "DRAW_GIVEAWAY") {
+        setData(data);
+        setTimeout(() => {
+          setLoading(false);
+        }, 100);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!data) {
+    return <div>Waiting for data...</div>;
+  }
 
   return <div id="phaser-game" key={"phaser-game"}></div>;
 };
