@@ -3,7 +3,9 @@ import Phaser, { Game as GameType } from "phaser";
 import { useEffect, useState } from "react";
 import PreloadScene from "./scenes/preloadScene";
 import MainScene from "./scenes/MainScene";
-import { GameDataAdmin } from "./models/game-data.model";
+import { GameDataAdmin, GetEntryBalanceCombinedResponse } from "./models/game-data.model";
+import GiveawayService from "./services/GiveawayService"; // Import the GiveawayService
+import EntryService from "./services/EntryService";
 
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1920;
@@ -11,6 +13,73 @@ const DEFAULT_HEIGHT = 1920;
 const Game = () => {
   const [game, setGame] = useState<GameType>();
   const [data, setData] = useState<GameDataAdmin>();
+  const [giveaway, setGiveaway] = useState<any>(null); // State for storing giveaway data
+  const [urlParams, setUrlParams] = useState<any>(null);
+  const [entries, setEntries] = useState<GetEntryBalanceCombinedResponse | null>(null);
+  const [loadingEntries, setLoadingEntries] = useState(false);
+
+  // Extract query parameters
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const extractedParams = {
+      accessToken: queryParams.get("accessToken"),
+      winUrl: queryParams.get("winUrl"),
+      adminUrl: queryParams.get("adminUrl"),
+      giveawayId: queryParams.get("giveawayId"),
+    };
+    setUrlParams(extractedParams);
+  }, []);
+
+  // Fetch giveaway details using GiveawayService
+  useEffect(() => {
+    const fetchGiveaway = async () => {
+      if (urlParams?.giveawayId) {
+        try {
+          const response = await GiveawayService.getGiveaway(urlParams.accessToken, urlParams.winUrl, urlParams.giveawayId);
+          setGiveaway(response); // Store the fetched giveaway data
+        } catch (error) {
+          console.error("Error fetching giveaway:", error);
+        }
+      }
+    };
+
+    fetchGiveaway();
+  }, [urlParams?.giveawayId, urlParams?.winUrl]);
+
+  // Fetch entry details
+  useEffect(() => {
+    const fetchEntries = async () => {
+      if (urlParams?.giveawayId) {
+        setLoadingEntries(true);
+        try {
+          const response = await EntryService.getEntries(urlParams.accessToken, urlParams.adminUrl, urlParams.giveawayId);
+          setEntries(response);
+        } catch (error) {
+          console.error("Error fetching entries:", error);
+        } finally {
+          setLoadingEntries(false);
+        }
+      }
+    };
+
+    fetchEntries();
+  }, [urlParams?.giveawayId, urlParams?.adminUrl]);
+
+  useEffect(() => {
+    if (giveaway && entries && urlParams?.accessToken) {
+      const gameDataAdmin: GameDataAdmin = {
+        type: "DRAW_GIVEAWAY",
+        accessToken: urlParams.accessToken!,
+        winnerSubmitUrl: urlParams.winUrl!,
+        giveawayId: urlParams.giveawayId!,
+        entries: entries?.data, 
+        giveaway: giveaway, 
+      };
+      setData(gameDataAdmin); 
+    }
+  }, [giveaway, entries, urlParams]);
+  
+  // Initialize Phaser game
   useEffect(() => {
     if (!game && data) {
       const initPhaser = async () => {
@@ -76,10 +145,7 @@ const Game = () => {
     return <div>Loading...</div>;
   }
 
-  if (!data) {
-    return <div>Waiting for data...</div>;
-  }
-
   return <div id="phaser-game" key={"phaser-game"}></div>;
 };
+
 export default Game;
