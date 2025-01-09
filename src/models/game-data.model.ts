@@ -33,3 +33,8 @@ export interface EntryBalanceCombinedDto {
   points: number;
   balanceIds: string[];
 }
+
+export interface GetEntryBalanceCombinedResponse {
+  data: EntryBalanceCombinedDto[];
+}
+
