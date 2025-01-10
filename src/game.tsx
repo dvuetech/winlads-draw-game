@@ -70,12 +70,12 @@ const Game = () => {
       const gameDataAdmin: GameDataAdmin = {
         type: "DRAW_GIVEAWAY",
         accessToken: urlParams.accessToken!,
-        winnerSubmitUrl: urlParams.winUrl!,
+        winnerSubmitUrl: `${urlParams.winUrl}/giveaway-winner/create`,
         giveawayId: urlParams.giveawayId!,
-        entries: entries?.data, 
-        giveaway: giveaway, 
+        entries: entries?.data,
+        giveaway: giveaway,
       };
-      setData(gameDataAdmin); 
+      setData(gameDataAdmin);
     }
   }, [giveaway, entries, urlParams]);
   
