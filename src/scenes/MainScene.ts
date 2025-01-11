@@ -421,7 +421,8 @@ export default class MainScene extends Phaser.Scene {
         {
           giveawayId: this.gameData!.giveawayId,
           winnerUserIds: [winner.userId], // Send single winner
-          entries: this.gameData!.entries,
+          // entries: this.gameData!.entries,
+          entries: [],
         },
         {
           headers: {
