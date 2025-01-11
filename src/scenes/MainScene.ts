@@ -400,7 +400,7 @@ export default class MainScene extends Phaser.Scene {
       this.listGetGifts.scaleXY(1.0);
       this.buttonDoneWinner.setScale(1.0);
       this.getGift.setScale(1.0);
-      this.submitData();
+      // this.submitWinner();
     }
   }
 
@@ -414,35 +414,26 @@ export default class MainScene extends Phaser.Scene {
     this.congrats.setScale(1.0);
   }
 
-  async submitData() {
-    debugger;
-    if (this.winners.length > 0) {
-      const confirmed = window.confirm("Are you sure you want to submit?");
-      if (!confirmed) {
-        return;
-      }
-      if (this.gameData) {
-        const data = axios.post(
-          this.gameData!.winnerSubmitUrl,
-          {
-            giveawayId: this.gameData!.giveawayId,
-            winnerUserIds: this.winners.map((winner) => winner.userId),
-            entries: this.gameData!.entries,
+  async submitWinner(winner: EntryBalanceCombinedDto) {
+    if (this.gameData) {
+      const data = axios.post(
+        this.gameData!.winnerSubmitUrl,
+        {
+          giveawayId: this.gameData!.giveawayId,
+          winnerUserIds: [winner.userId], // Send single winner
+          entries: this.gameData!.entries,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.gameData!.accessToken}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${this.gameData!.accessToken}`,
-            },
-          }
-        );
-        await Promise.all(
-          this.winners.map((winner) => {
-            return data;
-          })
-        );
-        alert("Submitted");
-      }
+        }
+      );
+  
+      await Promise.all([data]);
+      return true;
     }
+    return false;
   }
 
   buttonMusicOn() {
@@ -719,6 +710,7 @@ export default class MainScene extends Phaser.Scene {
         console.log("Winner is ", winner);
         const entry = this.giveawayEntries.find((e) => e.userId === winner);
         this.winners.push(entry!);
+        this.submitWinner(entry!);
         this.buttonGift.setVisible(true);
         this.text2.setText(this.formatNameWithInitials(entry?.name!));
         this.text2.setVisible(true);
