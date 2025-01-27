@@ -8,13 +8,14 @@ import {
   GameDataAdmin,
   GetEntryBalanceCombinedResponse,
 } from "./models/game-data.model";
-import GiveawayService from "./services/GiveawayService"; // Import the GiveawayService
-import EntryService from "./services/EntryService";
+import GiveawayService from "./services/GiveawayService"; // Import the GiveawayService for fetching giveaway data
+import EntryService from "./services/EntryService"; // Import the EntryService for fetching entries
 
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1920;
 
 const Game = () => {
+  // State hooks for managing the game instance and data
   const [game, setGame] = useState<GameType>();
   const [data, setData] = useState<GameDataAdmin>();
   const [giveaway, setGiveaway] = useState<any>(null); // State for storing giveaway data
@@ -25,8 +26,8 @@ const Game = () => {
   const [giveawayLoading, setGiveawayLoading] = useState(true);
 
   const searchParams = useSearchParams();
-  // Extract query parameters
   const [missingValues, setMissingValues] = useState<string[]>([]);
+  // Extract query parameters from the URL and check if any are missing
   useEffect(() => {
     const accessToken = searchParams.get("accessToken");
     const winUrl = searchParams.get("winUrl");
@@ -41,14 +42,14 @@ const Game = () => {
     const missingValues: string[] = [];
     Object.entries(extractedParams).forEach(([key, value]) => {
       if (!value) {
-        missingValues.push(key);
+        missingValues.push(key); // Add missing parameters to the missingValues array
       }
     });
-    setMissingValues(missingValues);
-    setUrlParams(extractedParams);
+    setMissingValues(missingValues); // Set missing parameters in the state
+    setUrlParams(extractedParams); // Set URL parameters in the state
   }, [searchParams]);
 
-  // Fetch entry details and giveaway details
+  // Fetch giveaway and entries data when URL params are available
   useEffect(() => {
     const fetchGiveaway = async () => {
       if (urlParams?.giveawayId) {
@@ -63,7 +64,7 @@ const Game = () => {
         } catch (error) {
           console.error("Error fetching giveaway:", error);
         } finally {
-          setGiveawayLoading(false);
+          setGiveawayLoading(false); 
         }
       }
     };
@@ -76,18 +77,19 @@ const Game = () => {
             urlParams.adminUrl,
             urlParams.giveawayId
           );
-          setEntries(response);
+          setEntries(response); // Store the fetched entries data
         } catch (error) {
           console.error("Error fetching entries:", error);
         } finally {
-          setLoadingEntries(false);
+          setLoadingEntries(false); 
         }
       }
     };
-    fetchGiveaway();
-    fetchEntries();
+    fetchGiveaway(); 
+    fetchEntries(); 
   }, [urlParams]);
 
+  // Once giveaway and entries data are available, prepare the game data for Phaser
   useEffect(() => {
     if (giveaway && entries && urlParams?.accessToken) {
       const gameDataAdmin: GameDataAdmin = {
@@ -98,11 +100,11 @@ const Game = () => {
         entries: entries?.data,
         giveaway: giveaway,
       };
-      setData(gameDataAdmin);
+      setData(gameDataAdmin); 
     }
   }, [giveaway, entries, urlParams]);
 
-  // Initialize Phaser game
+  // Initialize the Phaser game instance once the data is available
   useEffect(() => {
     if (!game && data) {
       const initPhaser = async () => {
@@ -143,14 +145,17 @@ const Game = () => {
     }
   }, [game, data]);
 
+  // Render a message if URL parameters are missing
   if (missingValues.length) {
     return <div>Missing params: {missingValues.join(", ")}</div>;
   }
 
+  // Render a loading state if giveaway or entries data are still loading
   if (loadingEntries && giveawayLoading) {
     return <div>Loading...</div>;
   }
 
+  // Render the Phaser game once everything is ready
   return <div id="phaser-game" key={"phaser-game"}></div>;
 };
 
