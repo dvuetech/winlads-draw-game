@@ -23,8 +23,8 @@ This project is a raffle draw system that provides a seamless way to conduct giv
 
 Clone the repository:
 ```bash
-git clone https://github.com/yourusername/raffle-draw-system.git
-cd raffle-draw-system
+git clone https://github.com/yourusername/winlads-draw-game.git
+cd winlads-draw-game
 ```
 Install dependencies:
 ```bash
