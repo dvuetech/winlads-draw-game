@@ -168,11 +168,19 @@ const response = await GiveawayService.getGiveaway(
 ```json
 {
   "id": "456",
-  "name": "Grand Giveaway",
+  "title": "Grand Giveaway",
   "startDate": "2025-01-01T00:00:00Z",
   "endDate": "2025-12-31T23:59:59Z",
   "prize": "iPhone 14",
-  "status": "active"
+  "status": "active",
+  "isEntriesAlreadySaved": false,
+  "hideOnPublic": false,
+  "giveawayType": "MAJOR",
+  "description": "A grand prize giveaway!",
+  "coverPhoto": "http://example.com/photo.jpg",
+  "coverPhoto43": null,
+  "termsAndConditions": "Terms apply...",
+  "video": null
 }
 ```
 
@@ -182,11 +190,19 @@ The response data is stored in the `giveaway` state:
 ```javascript
 {
   id: "456",
-  name: "Grand Giveaway",
+  title: "Grand Giveaway",
   startDate: "2025-01-01T00:00:00Z",
   endDate: "2025-12-31T23:59:59Z",
   prize: "iPhone 14",
-  status: "active"
+  status: "active",
+  isEntriesAlreadySaved: false,
+  hideOnPublic: false,
+  giveawayType: "MAJOR",
+  description: "A grand prize giveaway!",
+  coverPhoto: "http://example.com/photo.jpg",
+  coverPhoto43: null,
+  termsAndConditions: "Terms apply...",
+  video: null
 }
 ```
 
@@ -209,9 +225,9 @@ const response = await EntryService.getEntries(
 ```json
 {
   "data": [
-    { "userId": "user1", "entryNumber": 1 },
-    { "userId": "user2", "entryNumber": 2 },
-    { "userId": "user3", "entryNumber": 3 }
+    { "userId": "user1", "name": "Alice", "email": "alice@example.com", "mobileNumber": null, "points": 100, "balanceIds": ["balance1"] },
+    { "userId": "user2", "name": "Bob", "email": "bob@example.com", "mobileNumber": "1234567890", "points": 200, "balanceIds": ["balance2"] },
+    { "userId": "user3", "name": "Charlie", "email": "charlie@example.com", "mobileNumber": null, "points": 150, "balanceIds": ["balance3"] }
   ]
 }
 ```
@@ -222,9 +238,9 @@ The entries data is stored in the `entries` state:
 ```javascript
 {
   data: [
-    { userId: "user1", entryNumber: 1 },
-    { userId: "user2", entryNumber: 2 },
-    { userId: "user3", entryNumber: 3 }
+    { userId: "user1", name: "Alice", email: "alice@example.com", mobileNumber: null, points: 100, balanceIds: ["balance1"] },
+    { userId: "user2", name: "Bob", email: "bob@example.com", mobileNumber: "1234567890", points: 200, balanceIds: ["balance2"] },
+    { userId: "user3", name: "Charlie", email: "charlie@example.com", mobileNumber: null, points: 150, balanceIds: ["balance3"] }
   ]
 }
 ```
@@ -257,17 +273,25 @@ The `gameDataAdmin` object will look like this:
   winnerSubmitUrl: "https://example.com/win/giveaway-winner/create",
   giveawayId: "456",
   entries: [
-    { userId: "user1", entryNumber: 1 },
-    { userId: "user2", entryNumber: 2 },
-    { userId: "user3", entryNumber: 3 }
+    { userId: "user1", name: "Alice", email: "alice@example.com", mobileNumber: null, points: 100, balanceIds: ["balance1"] },
+    { userId: "user2", name: "Bob", email: "bob@example.com", mobileNumber: "1234567890", points: 200, balanceIds: ["balance2"] },
+    { userId: "user3", name: "Charlie", email: "charlie@example.com", mobileNumber: null, points: 150, balanceIds: ["balance3"] }
   ],
   giveaway: {
     id: "456",
-    name: "Grand Giveaway",
+    title: "Grand Giveaway",
     startDate: "2025-01-01T00:00:00Z",
     endDate: "2025-12-31T23:59:59Z",
     prize: "iPhone 14",
-    status: "active"
+    status: "active",
+    isEntriesAlreadySaved: false,
+    hideOnPublic: false,
+    giveawayType: "MAJOR",
+    description: "A grand prize giveaway!",
+    coverPhoto: "http://example.com/photo.jpg",
+    coverPhoto43: null,
+    termsAndConditions: "Terms apply...",
+    video: null
   }
 }
 ```
