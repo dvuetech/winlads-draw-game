@@ -1,10 +1,10 @@
-# Raffle Draw System
+# Claw Machine Game
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Overview
 
-This project is a raffle draw system that provides a seamless way to conduct giveaway draws using Phaser.js. It integrates data from external services to ensure a fair and transparent drawing process. The system allows administrators to load entries and giveaway details, visualizing the draw in an engaging manner for participants.
+This project is a Claw Machine Game that provides a seamless way to conduct giveaway draws using Phaser.js. It integrates data from external services to ensure a fair and transparent drawing process. The system allows administrators to load entries and giveaway details, visualizing the draw in an engaging manner for participants.
 
 ## Features
 
