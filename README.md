@@ -12,6 +12,42 @@ This project is a raffle draw system that provides a seamless way to conduct giv
 - **Phaser-based Visualization**: The draw is rendered using Phaser.js for smooth and interactive graphics.
 - **Integration with External Services**: Fetches giveaway and entry data using pre-defined APIs.
 
+## Dependencies
+
+This project uses the following dependencies:
+
+- **`@types/node`**: TypeScript definitions for Node.js (v20.5.9)  
+- **`@types/react`**: TypeScript definitions for React (v18.2.21)  
+- **`@types/react-dom`**: TypeScript definitions for React DOM (v18.2.7)  
+- **`autoprefixer`**: Adds vendor prefixes to CSS (v10.4.15)  
+- **`axios`**: HTTP client for API requests (^1.7.7)  
+- **`eslint`**: Pluggable JavaScript linter (v8.48.0)  
+- **`eslint-config-next`**: ESLint configuration for Next.js (v13.4.19)  
+- **`next`**: React framework for production (v13.4.19)  
+- **`phaser`**: 2D game framework (^3.60.0)  
+- **`postcss`**: CSS transformer (v8.4.29)  
+- **`react`**: JavaScript library for building user interfaces (v18.2.0)  
+- **`react-dom`**: React DOM library (v18.2.0)  
+- **`tailwindcss`**: CSS framework for styling (v3.3.3)  
+- **`typescript`**: JavaScript with static typing (v5.2.2)  
+
+## Choosing a Winner
+
+### The winner selection process involves the following steps:
+
+1. Creating a Weighted Array: An array is generated where each participant's user ID is repeated according to their points value, with previous winners excluded to ensure fairness.
+2. Shuffling the Array: The array is shuffled randomly to ensure that the process is unbiased.
+3. Selecting a Random Winner: A random index is chosen from the shuffled array to select the winner.
+4. Updating the Winner's Points: The winner's points are decremented, reducing their chances in future draws.
+5. Promise Resolution: The winner's user ID is resolved asynchronously, enabling integration with other processes.
+
+### Key Features of the Winner Selection Process
+
+- Weighted Randomness: Participants with more points have a higher chance of being selected.
+- Exclusion of Previous Winners: Ensures fairness by excluding participants who have already won.
+- Dynamic Point Management: Adjusts participant points after each draw to maintain fairness.
+- Randomness with Integrity: The shuffling process and random index selection ensure unbiased outcomes.
+
 ## Setup and Usage
 
 ### Prerequisites
@@ -91,17 +127,3 @@ Please ensure all contributions:
 
 This project is licensed under the MIT License. You are free to use, modify, and distribute this project with proper attribution.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
