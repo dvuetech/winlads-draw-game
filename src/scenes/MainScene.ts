@@ -1,4 +1,8 @@
-// current file
+/**
+ * MainScene - A Phaser game scene that implements a claw machine game with prize selection
+ * This scene manages a virtual claw machine where players can grab prizes and select winners
+ * for a giveaway contest.
+ */
 import {
   EntryBalanceCombinedDto,
   GameDataAdmin,
@@ -7,11 +11,14 @@ import axios from "axios";
 import { Physics } from "phaser";
 
 export default class MainScene extends Phaser.Scene {
+  // UI Elements
   text1!: Phaser.GameObjects.Text;
   text2!: Phaser.GameObjects.Text;
   machine!: Phaser.GameObjects.Image;
   bgMachine!: Phaser.GameObjects.Image;
   congrats!: Phaser.GameObjects.Image;
+
+  // Control buttons
   buttonRight!: Phaser.GameObjects.Image;
   buttonGrab!: Phaser.GameObjects.Image;
   buttonLeft!: Phaser.GameObjects.Image;
@@ -21,12 +28,18 @@ export default class MainScene extends Phaser.Scene {
   giveawayTitle!: Phaser.GameObjects.Text;
   buttonOk!: Phaser.GameObjects.Image;
   buttonDoneWinner!: Phaser.GameObjects.Image;
+
+  // Game objects
   claw!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   clawCenter!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   lever!: Phaser.GameObjects.Image;
   gifts!: Physics.Arcade.Group;
+
+  // UI elements for displaying prizes
   displayGift!: any;
   congratsGift!: any;
+
+  // Game state variables
   fps: any;
   speed: any;
   deltaTime: any;
@@ -38,22 +51,28 @@ export default class MainScene extends Phaser.Scene {
   key!: Array<string>;
   heightToIgnoreTheBall: any = 1;
 
+  // Prize display elements
   listGetGifts!: Phaser.GameObjects.Group;
   getGift!: Phaser.GameObjects.Image;
 
+  // Sound effects
   backsound!: any;
   congratsound!: any;
   movelr!: Phaser.Sound.BaseSound;
   moveUpDownSound!: Phaser.Sound.BaseSound;
   fall!: Phaser.Sound.BaseSound;
 
+  // Keyboard controls
   keyL!: Phaser.Input.Keyboard.Key;
   keyR!: Phaser.Input.Keyboard.Key;
   keyD!: Phaser.Input.Keyboard.Key;
+
+  // Game configuration constants
   OBJECT_COUNT = 60;
   SIZE = 0.6;
   CLAW_TOP_Y = 600;
-  // Add boundary constants
+
+  // Game boundaries
   readonly BOUNDARY_LEFT = 100;
   readonly BOUNDARY_TOP = 200;
   readonly BOUNDARY_WIDTH = 920;
@@ -80,6 +99,7 @@ export default class MainScene extends Phaser.Scene {
 
   gameData?: GameDataAdmin;
 
+  // Getter for giveaway entries
   get giveawayEntries() {
     return this.gameData?.entries ?? [];
   }
@@ -317,10 +337,12 @@ export default class MainScene extends Phaser.Scene {
     this.setupInputListeners();
   }
 
+  //Returns list of winners' names
   get listGifts() {
     return this.winners?.map((winner) => winner.name) ?? [];
   }
 
+  //Creates and displays the list of winners
   listGiftsGroup() {
     // Clear existing group if it exists
     if (this.listGetGifts) {
