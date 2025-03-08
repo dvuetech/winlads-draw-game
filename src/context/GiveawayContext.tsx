@@ -32,9 +32,17 @@ export const useGiveawayContext = () => {
   return context;
 };
 
+function between(min: number, max: number) {
+  // Ensure min and max are integers
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  // The formula ensures both min and max are inclusive
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Phaser.Math.Between(0, i);
+    const j = between(0, i);
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
@@ -52,7 +60,7 @@ export function chooseWinner(
     return [];
   });
   shuffleArray(array);
-  const randomIndex = Phaser.Math.Between(0, array.length - 1);
+  const randomIndex = between(0, array.length - 1);
   const winner = array[randomIndex];
   const entry = newObject.find((item) => item.userId === winner);
   if (entry) {
@@ -202,17 +210,37 @@ export const GiveawayContextProvider = ({
     if (data) {
       let length = 0;
       const entriesFormatted = data.entries?.map((entry) => {
-        const name = formatNameWithInitials(entry.name);
+        const name = formatNameWithInitials(entry.name).replaceAll(". ", ".");
         length = Math.max(length, name.length);
         return {
           ...entry,
           name: name,
         };
       });
+      const secondFormatted = entriesFormatted?.map((entry) => {
+        let name = entry.name;
+        // Randomly add spaces to beginning and end of the name to make all names the same length. Must be random.
+        const spacesToAdd = length - name.length;
 
+        if (spacesToAdd > 0) {
+          // Randomly decide how many spaces to add to the beginning vs end
+          const spacesAtBeginning = Math.floor(
+            Math.random() * (spacesToAdd + 1)
+          );
+          const spacesAtEnd = spacesToAdd - spacesAtBeginning;
+
+          // Add the spaces
+          name = " ".repeat(spacesAtBeginning) + name + " ".repeat(spacesAtEnd);
+        }
+
+        return {
+          ...entry,
+          name: name.toUpperCase(),
+        };
+      });
       return {
         ...data,
-        entries: entriesFormatted,
+        entries: secondFormatted,
         maxNameLength: length,
       };
     }

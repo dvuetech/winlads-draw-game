@@ -1,7 +1,7 @@
 "use client";
 
 import { GameDataAdmin } from "@/models/game-data.model";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import SlotMachineImage from "./SlotMachine";
 import SlotLiveStream from "./SlotLiveStream";
 import confetti from "canvas-confetti";
@@ -25,12 +25,13 @@ const SlotMachineComponent = React.forwardRef<
   SlotMachineComponentProps
 >(({ textLength, onSpin }, ref) => {
   const iLength = textLength;
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState(Array(textLength).fill(" ").join(""));
   const [spinning, setSpinning] = useState(false);
   const [reelPositions, setReelPositions] = useState<number[]>([]);
   const reelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [status, setStatus] = useState<"init" | "spinning" | "stopped">("init");
 
+  
   // Store custom character sets for each reel
   const [reelCharSets, setReelCharSets] = useState<string[]>([]);
 
@@ -75,7 +76,8 @@ const SlotMachineComponent = React.forwardRef<
   }, [iLength, inputText]);
 
   // Apply idle animations to reels
-  useEffect(() => {
+
+  const initSpin = useCallback(() => {
     // Skip if we've already spun or there's no input
     if (hasSpun || iLength === 0) return;
 
@@ -129,8 +131,6 @@ const SlotMachineComponent = React.forwardRef<
       return -charIndex * 60;
     });
 
-    // Log for debugging
-    console.log("Input text:", winnerName);
     console.log("Target positions:", targetPositions);
 
     // Stop each reel with a staggered delay
@@ -138,7 +138,7 @@ const SlotMachineComponent = React.forwardRef<
       // Add increasing delays for each reel (2s base + index*500ms + small random)
       // Longer delay to allow for slower spinning animation
       setTimeout(
-        () => stopReel(index, position, winnerName),
+        () => stopReel(index, position),
         2000 + index * 500 + Math.random() * 200
       );
     });
@@ -185,9 +185,9 @@ const SlotMachineComponent = React.forwardRef<
   // Function to stop a specific reel at the target position
   const stopReel = (
     reelIndex: number,
-    finalPosition: number,
-    winnerName: string
+    finalPosition: number
   ) => {
+    console.log("stopReel", reelIndex, finalPosition);
     const reelElement = reelRefs.current[reelIndex];
     if (!reelElement) return;
 
@@ -242,10 +242,15 @@ const SlotMachineComponent = React.forwardRef<
         <SlotLiveStream />
         <SlotMachineImage
           onClickDraw={() => {
+            if(status === "spinning") return;
             setTimeout(() => {
               const winnerName = onSpin();
               setInputText(winnerName);
-              spin(winnerName);
+              initSpin();
+              
+              setTimeout(() => {
+                spin(winnerName);
+              }, 500);
             }, 100);
           }}
         >
@@ -254,7 +259,7 @@ const SlotMachineComponent = React.forwardRef<
               className="flex mb-6 overflow-x-auto absolute"
               style={{ maxWidth: "100vw", top: "-20px" }}
             >
-              {inputText.split("").map((char, reelIndex) => {
+              {Array(iLength).fill(" ").map((_, reelIndex) => {
                 const width = Math.floor(590 / iLength);
                 const fontSize = getFontSize(iLength);
                 return (

@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 const SlotMachinePage = () => {
   const {
     dataFormatted,
-    data,
     submitWinner,
     giveawayLoading,
     loadingEntries,
@@ -18,10 +17,10 @@ const SlotMachinePage = () => {
     EntryBalanceCombinedDto[]
   >([]);
   useEffect(() => {
-    if (data) {
-      setGiveawayEntries(data.entries ?? []);
+    if (dataFormatted) {
+      setGiveawayEntries(dataFormatted.entries ?? []);
     }
-  }, [data]);
+  }, [dataFormatted]);
 
   const [winners, setWinners] = useState<EntryBalanceCombinedDto[]>([]);
   const onSpin = useCallback((): string => {
@@ -33,10 +32,10 @@ const SlotMachinePage = () => {
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
       setWinners((prev) => [...prev, entry!]);
-      submitWinner(data!, entry!);
+      // submitWinner(dataFormatted!, entry!);
     }
-    return entry?.name?.toUpperCase().trim().replaceAll(". ", ".") ?? "";
-  }, [data, giveawayEntries, submitWinner, winners]);
+    return entry?.name ?? Array(dataFormatted?.maxNameLength ?? 1).fill(" ").join("");
+  }, [dataFormatted, giveawayEntries, submitWinner, winners]);
 
   const textLength = useMemo(
     () => dataFormatted?.maxNameLength ?? 1,
@@ -49,6 +48,7 @@ const SlotMachinePage = () => {
     // Render a loading state if giveaway or entries data are still loading
     return <div>Loading...</div>;
   }
+
   return (
     <SlotMachineComponent
       key={textLength}
