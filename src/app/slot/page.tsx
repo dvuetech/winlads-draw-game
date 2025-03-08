@@ -38,7 +38,7 @@ const SlotMachinePage = () => {
   }, [dataFormatted, giveawayEntries, submitWinner, winners]);
 
   const textLength = useMemo(
-    () => dataFormatted?.maxNameLength ?? 1,
+    () => dataFormatted?.maxNameLength ?? 0,
     [dataFormatted]
   );
   // Render a message if URL parameters are missing
