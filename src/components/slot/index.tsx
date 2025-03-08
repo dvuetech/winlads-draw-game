@@ -18,9 +18,8 @@ function randomNumber(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const initText = "Nallaperuma T.".toUpperCase();
 const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
-  const [inputText, setInputText] = useState(initText);
+  const [inputText, setInputText] = useState("");
   const iLength = inputText.length;
   const [spinning, setSpinning] = useState(false);
   const [reelPositions, setReelPositions] = useState<number[]>([]);
@@ -34,6 +33,13 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
 
   // Store idle animation speeds for each reel
   const [idleSpeeds, setIdleSpeeds] = useState<number[]>([]);
+
+  useEffect(() => {
+    const winnerName = prompt("Input Winner Name");
+    if (winnerName) {
+      setInputText(winnerName.toUpperCase().trim());
+    }
+  }, []);
 
   // Handle text input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,9 +210,9 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
         <SlotLiveStream />
         <SlotMachineImage
           onClickDraw={() => {
-            setInputText(initText);
+            setInputText(inputText);
             setTimeout(() => {
-              spin(initText);
+              spin(inputText);
             }, 100);
           }}
         >
