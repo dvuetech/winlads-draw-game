@@ -32,7 +32,7 @@ const SlotMachinePage = () => {
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
       setWinners((prev) => [...prev, entry!]);
-      // submitWinner(dataFormatted!, entry!);
+      submitWinner(dataFormatted!, entry!);
     }
     return entry?.name ?? Array(dataFormatted?.maxNameLength ?? 1).fill(" ").join("");
   }, [dataFormatted, giveawayEntries, submitWinner, winners]);
