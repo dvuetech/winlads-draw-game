@@ -9,6 +9,11 @@ import {
 } from "@/models/game-data.model";
 import axios from "axios";
 import { Physics } from "phaser";
+import {
+  chooseWinner,
+  formatNameWithInitials,
+  submitWinner,
+} from "../context/GiveawayContext";
 
 export default class MainScene extends Phaser.Scene {
   // UI Elements
@@ -95,17 +100,13 @@ export default class MainScene extends Phaser.Scene {
     });
     console.log(config);
     this.gameData = config?.gameData;
+    this.giveawayEntries = this.gameData?.entries ?? [];
   }
 
   gameData?: GameDataAdmin;
-
-  // Getter for giveaway entries
-  get giveawayEntries() {
-    return this.gameData?.entries ?? [];
-  }
+  giveawayEntries: EntryBalanceCombinedDto[] = [];
 
   create() {
-    // this.gameData = this.registry.get("importedData") as GameDataAdmin;
     console.log("gameData", this.gameData);
     const cam = this.cameras.main;
     this.cameras.main.setBackgroundColor(0xdcf3ff);
@@ -360,7 +361,7 @@ export default class MainScene extends Phaser.Scene {
         .text(
           this.cameras.main.width / 2,
           index * 50 + 700,
-          this.formatNameWithInitials(name).trim(),
+          formatNameWithInitials(name),
           {
             fontFamily: "Arial Black",
             fontSize: "36px",
@@ -437,26 +438,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   async submitWinner(winner: EntryBalanceCombinedDto) {
-    if (this.gameData) {
-      const data = axios.post(
-        this.gameData!.winnerSubmitUrl,
-        {
-          giveawayId: this.gameData!.giveawayId,
-          winnerUserIds: [winner.userId], // Send single winner
-          // entries: this.gameData!.entries,
-          entries: [],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.gameData!.accessToken}`,
-          },
-        }
-      );
-  
-      await Promise.all([data]);
-      return true;
-    }
-    return false;
+    return submitWinner(this.gameData!, winner);
   }
 
   buttonMusicOn() {
@@ -505,41 +487,19 @@ export default class MainScene extends Phaser.Scene {
       this.buttonGrab.setScale(1, 0.95);
       // this.moveUpDownSound.play();
       this.startAutoMovement();
-      this.chooseWinner();
+      const { winner, giveawayEntries } = chooseWinner(
+        this.giveawayEntries ?? [],
+        this.winners
+      );
+      this.giveawayEntries = giveawayEntries;
+      this.winnerId = new Promise((resolve) => {
+        resolve(winner);
+      });
     }
-  }
-  private shuffleArray<T>(array: T[]): T[] {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Phaser.Math.Between(0, i);
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
   }
 
   winnerId?: Promise<string>;
   winners: EntryBalanceCombinedDto[] = [];
-  chooseWinner() {
-    this.winnerId = new Promise((resolve) => {
-      const array = this.giveawayEntries.flatMap((item) => {
-        if (!this.winners.some((winner) => winner.userId === item.userId)) {
-          return Array(item.points).fill(item.userId);
-        }
-        return [];
-      });
-      console.log("Before Shuffle", array);
-      this.shuffleArray(array);
-      console.log("After Shuffle", array);
-      const randomIndex = Phaser.Math.Between(0, array.length - 1);
-      const winner = array[randomIndex];
-      console.log("Before Update", this.giveawayEntries);
-      const entry = this.giveawayEntries.find((item) => item.userId === winner);
-      if (entry) {
-        entry.points = entry.points - 1;
-      }
-      console.log("After Update", this.giveawayEntries);
-      resolve(winner);
-    });
-  }
 
   clawDestinationY: number = this.BOUNDARY_HEIGHT + this.BOUNDARY_TOP;
   startAutoMovement() {
@@ -634,21 +594,6 @@ export default class MainScene extends Phaser.Scene {
       // this.chooseWinner();
     }
   }
-  private formatNameWithInitials(fullName: string): string {
-    if (!fullName) return "John D.";
-    const names = fullName.split(" ");
-
-    if (names.length === 1) return names[0];
-
-    // Keep first name and initialize others
-    const firstName = names[0];
-    const initials = names
-      .slice(1)
-      .map((name) => `${name?.[0] ?? ""}.`)
-      .join(" ");
-
-    return `${firstName} ${initials ?? ""}`;
-  }
 
   private currentGift: any = null; // Add this property to track current gift
   alreadyPickedObject: any = null;
@@ -735,7 +680,7 @@ export default class MainScene extends Phaser.Scene {
         this.winners.push(entry!);
         this.submitWinner(entry!);
         this.buttonGift.setVisible(true);
-        this.text2.setText(this.formatNameWithInitials(entry?.name!));
+        this.text2.setText(formatNameWithInitials(entry?.name!));
         this.text2.setVisible(true);
 
         this.congrats.setVisible(true);

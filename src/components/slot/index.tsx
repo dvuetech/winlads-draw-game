@@ -1,9 +1,10 @@
 "use client";
 
 import { GameDataAdmin } from "@/models/game-data.model";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SlotMachineImage from "./SlotMachine";
 import SlotLiveStream from "./SlotLiveStream";
+import confetti from "canvas-confetti";
 
 // Define base characters we'll use for the spinning reels
 // Including letters, numbers, and common punctuation
@@ -11,19 +12,24 @@ const BASE_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .,!?-_@#$%&*()[]{}:;'\"/\\<>+=~`^XYZ";
 
 export interface SlotMachineComponentProps {
-  data?: GameDataAdmin;
+  textLength: number;
+  onSpin: () => string;
 }
 
 function randomNumber(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
+const SlotMachineComponent = React.forwardRef<
+  HTMLDivElement,
+  SlotMachineComponentProps
+>(({ textLength, onSpin }, ref) => {
+  const iLength = textLength;
   const [inputText, setInputText] = useState("");
-  const iLength = inputText.length;
   const [spinning, setSpinning] = useState(false);
   const [reelPositions, setReelPositions] = useState<number[]>([]);
   const reelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [status, setStatus] = useState<"init" | "spinning" | "stopped">("init");
 
   // Store custom character sets for each reel
   const [reelCharSets, setReelCharSets] = useState<string[]>([]);
@@ -33,25 +39,6 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
 
   // Store idle animation speeds for each reel
   const [idleSpeeds, setIdleSpeeds] = useState<number[]>([]);
-
-  useEffect(() => {
-    const winnerName = prompt("Input Winner Name");
-    if (winnerName) {
-      setInputText(winnerName.toUpperCase().trim());
-    }
-  }, []);
-
-  // Handle text input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newText = e.target.value;
-    setInputText(newText);
-
-    // Reset spin state when input changes
-    if (hasSpun) {
-      setHasSpun(false);
-      setSpinning(false);
-    }
-  };
 
   // Update reel count and character sets when input text changes
   useEffect(() => {
@@ -98,12 +85,12 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
         if (reel) {
           // Remove any existing animations
           reel.classList.remove("reel-spinning");
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < iLength; i++) {
             reel.classList.remove(`reel-idle-${i}`);
           }
 
           // Add the idle animation
-          reel.classList.add(`reel-idle-${index % 10}`);
+          reel.classList.add(`reel-idle-${index}`);
         }
       });
     }, 50);
@@ -118,12 +105,12 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
 
     setSpinning(true);
     setHasSpun(true);
-
+    setStatus("spinning");
     // Start the spinning animation on all reels
     reelRefs.current.forEach((reel, index) => {
       if (reel) {
         // Remove idle animation and add spinning animation
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < iLength; i++) {
           reel.classList.remove(`reel-idle-${i}`);
         }
         reel.classList.add("reel-spinning");
@@ -157,8 +144,50 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
     });
   };
 
+  const showConfetti = () => {
+    console.log("showConfetti");
+    const duration = 6 * 1000;
+    var end = Date.now() + duration;
+    (function frame() {
+      const colors = [
+        "#77D1E6",
+        "#FF6C2E",
+        "#FFFFFF",
+        "#D0D0D0",
+        "#A0A0A0",
+        "#484848",
+        "#1A1A1A",
+      ];
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+      });
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+    setTimeout(() => {
+      setStatus("init");
+    }, 6000);
+  };
+
   // Function to stop a specific reel at the target position
-  const stopReel = (reelIndex: number, finalPosition: number, winnerName: string) => {
+  const stopReel = (
+    reelIndex: number,
+    finalPosition: number,
+    winnerName: string
+  ) => {
     const reelElement = reelRefs.current[reelIndex];
     if (!reelElement) return;
 
@@ -185,7 +214,10 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
     if (reelIndex === iLength - 1) {
       // Set spinning to false after a short delay
       setTimeout(() => {
+        setStatus("stopped");
         setSpinning(false);
+        showConfetti();
+        playWinningMusic();
         // We do NOT restart idle animations after spinning is complete
       }, 500);
     }
@@ -210,9 +242,10 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
         <SlotLiveStream />
         <SlotMachineImage
           onClickDraw={() => {
-            setInputText(inputText);
             setTimeout(() => {
-              spin(inputText);
+              const winnerName = onSpin();
+              setInputText(winnerName);
+              spin(winnerName);
             }, 100);
           }}
         >
@@ -223,6 +256,7 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
             >
               {inputText.split("").map((char, reelIndex) => {
                 const width = Math.floor(590 / iLength);
+                const fontSize = getFontSize(iLength);
                 return (
                   <div
                     key={reelIndex}
@@ -242,13 +276,13 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
                         if (el && !hasSpun) {
                           // Remove any existing animations
                           el.classList.remove("reel-spinning");
-                          for (let i = 0; i < 10; i++) {
+                          for (let i = 0; i < iLength; i++) {
                             el.classList.remove(`reel-idle-${i}`);
                           }
                           // Add idle animation immediately
-                          el.classList.add(`reel-idle-${reelIndex % 10}`);
+                          el.classList.add(`reel-idle-${reelIndex}`);
                         }
-                      } }
+                      }}
                       style={{
                         position: "absolute",
                         // Adjust top position to account for the extra character at the beginning
@@ -258,25 +292,38 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
                           ? `translateY(${reelPositions[reelIndex] || 0}px)`
                           : "translateY(60px)", // Start at A if not spun yet
                       }}
+                      className={`reel-container `}
                     >
                       {/* Circular character set with last char at beginning and end */}
                       {getReelCharacters(reelIndex)
                         .split("")
-                        .map((letter, index) => (
-                          <div
-                            key={index}
-                            className="h-[60px] flex items-center justify-center text-4xl "
-                            style={{
-                              fontSize: `${width}px`,
-                            }}
-                          >
-                            {letter === " " ? (
-                              <span className="w-4 h-4 rounded-full"></span>
-                            ) : (
-                              <span>{letter}</span>
-                            )}
-                          </div>
-                        ))}
+                        .map((letter, index) => {
+                          const isWinningText =
+                            inputText?.charAt(reelIndex) === letter;
+                          return (
+                            <div
+                              key={index}
+                              className="h-[60px] flex items-center justify-center text-4xl "
+                              style={{
+                                fontSize: `${fontSize}px`,
+                              }}
+                            >
+                              {letter === " " ? (
+                                <span className="w-4 h-4 rounded-full"></span>
+                              ) : (
+                                <span
+                                  className={
+                                    status === "stopped" && isWinningText
+                                      ? "selected-character"
+                                      : ""
+                                  }
+                                >
+                                  {letter}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
                   </div>
                 );
@@ -302,7 +349,7 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
               }
 
               /* Generate idle animations for each potential reel */
-              ${Array.from({ length: 10 })
+              ${Array.from({ length: iLength })
                 .map((_, index) => {
                   const duration = idleSpeeds[index] || 15 + Math.random() * 10;
                   return `
@@ -318,6 +365,44 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
             .reel-idle-${index} {
               animation: idle-spin-${index} ${duration}s linear infinite;
             }
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.2); }
+            }
+            
+            @keyframes colorCycle {
+              0%, 100% { color: #000; }
+              10% { color: #e63946; }  /* Red */
+              20% { color: #f1c40f; }  /* Yellow */
+              30% { color: #2ecc71; }  /* Green */
+              40% { color: #3498db; }  /* Blue */
+              50% { color: #9b59b6; }  /* Purple */
+              60% { color: #ff9f43; }  /* Orange */
+              70% { color: #1abc9c; }  /* Teal */
+              80% { color: #fd79a8; }  /* Pink */
+              90% { color: #00cec9; }  /* Cyan */
+            }
+            
+            @keyframes glow {
+              0%, 100% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+              50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6); }
+            }
+            
+            /* Apply winning animation to the selected character */
+            .selected-character {
+              animation: 
+                pulse 1s ease-in-out infinite,
+                colorCycle 5s linear,
+                glow 2s ease-in-out infinite;
+            }
+            
+            /* Winning animation class */
+            .winning-animation > div:nth-child(2) {
+              animation: 
+                pulse 1s ease-in-out infinite,
+                colorCycle 5s linear,
+                glow 2s ease-in-out infinite;
+            }
           `;
                 })
                 .join("\n")}
@@ -327,5 +412,39 @@ const SlotMachineComponent = ({ data }: SlotMachineComponentProps) => {
       </div>
     </div>
   );
-};
+});
+
+SlotMachineComponent.displayName = "SlotMachineComponent";
+
 export default SlotMachineComponent;
+
+// Play the audio
+function playWinningMusic() {
+  const audio = new Audio("/audio/jackpot-sound.mp3");
+
+  audio.volume = 0.5;
+  audio.play().catch((error) => {
+    console.log("Failed to play audio:", error);
+  });
+}
+const getFontSize = (iLength: number) => {
+  switch (iLength) {
+    case 1:
+      return 50;
+    case 2:
+    case 3:
+      return 60;
+    case 4:
+      return 60;
+    case 5:
+      return 60;
+    case 6:
+      return 60;
+    case 7:
+      return 60;
+    case 8:
+      return 70;
+    default:
+      return Math.floor(590 / iLength);
+  }
+};
