@@ -23,6 +23,8 @@ const SlotMachinePage = () => {
   }, [dataFormatted]);
 
   const [winners, setWinners] = useState<EntryBalanceCombinedDto[]>([]);
+  const [latestWinner, setLatestWinner] = useState<EntryBalanceCombinedDto>();
+
   const onSpin = useCallback((): string => {
     const { winner, giveawayEntries: newGiveawayEntries } = chooseWinner(
       giveawayEntries ?? [],
@@ -31,11 +33,22 @@ const SlotMachinePage = () => {
     const entry = giveawayEntries.find((e) => e.userId === winner);
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
-      setWinners((prev) => [...prev, entry!]);
-      submitWinner(dataFormatted!, entry!);
+      setLatestWinner(entry);
     }
     return entry?.name ?? Array(dataFormatted?.maxNameLength ?? 1).fill(" ").join("");
-  }, [dataFormatted, giveawayEntries, submitWinner, winners]);
+  }, [dataFormatted, giveawayEntries, winners]);
+
+  const onFinish = useCallback(
+    () => {
+      if (latestWinner) {
+        setWinners((prev) => [...prev, latestWinner]);
+        submitWinner(dataFormatted!, latestWinner).then(() => {
+          setLatestWinner(undefined);
+        });
+      }
+    },
+    [dataFormatted, latestWinner, submitWinner],
+  )
 
   const textLength = useMemo(
     () => dataFormatted?.maxNameLength ?? 0,
@@ -54,6 +67,7 @@ const SlotMachinePage = () => {
       key={textLength}
       textLength={textLength}
       onSpin={onSpin}
+      onFinish={onFinish}
     />
   );
 };

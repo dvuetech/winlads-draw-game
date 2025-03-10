@@ -14,6 +14,7 @@ const BASE_CHARS =
 export interface SlotMachineComponentProps {
   textLength: number;
   onSpin: () => string;
+  onFinish: () => void;
 }
 
 function randomNumber(min: number, max: number) {
@@ -23,7 +24,7 @@ function randomNumber(min: number, max: number) {
 const SlotMachineComponent = React.forwardRef<
   HTMLDivElement,
   SlotMachineComponentProps
->(({ textLength, onSpin }, ref) => {
+>(({ textLength, onSpin, onFinish }, ref) => {
   const iLength = textLength;
   const [inputText, setInputText] = useState(Array(textLength).fill(" ").join(""));
   const [spinning, setSpinning] = useState(false);
@@ -217,6 +218,7 @@ const SlotMachineComponent = React.forwardRef<
         setStatus("stopped");
         setSpinning(false);
         showConfetti();
+        onFinish();
         playWinningMusic();
         // We do NOT restart idle animations after spinning is complete
       }, 500);
