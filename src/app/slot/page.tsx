@@ -30,7 +30,9 @@ const SlotMachinePage = () => {
       giveawayEntries ?? [],
       winners
     );
-    const entry = giveawayEntries.find((e) => e.userId === winner);
+    
+    const entry = newGiveawayEntries.find((e) => e.userId === winner);
+    console.log(entry);
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
       setLatestWinner(entry);

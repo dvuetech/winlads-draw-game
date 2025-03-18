@@ -1,15 +1,16 @@
 "use client";
 
 import { GameDataAdmin } from "@/models/game-data.model";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SlotMachineImage from "./SlotMachine";
 import SlotLiveStream from "./SlotLiveStream";
 import confetti from "canvas-confetti";
+import { shuffleArray } from "@/context/GiveawayContext";
 
 // Define base characters we'll use for the spinning reels
 // Including letters, numbers, and common punctuation
 const BASE_CHARS =
-  "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .,!?-_@#$%&*()[]{}:;'\"/\\<>+=~`^XYZ";
+  "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .XYZ";
 
 export interface SlotMachineComponentProps {
   textLength: number;
@@ -21,11 +22,26 @@ function randomNumber(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function shuffleString(str: string): string {
+  const array = str.split('');
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // swap elements
+  }
+  return array.join('');
+}
+
 const SlotMachineComponent = React.forwardRef<
   HTMLDivElement,
   SlotMachineComponentProps
 >(({ textLength, onSpin, onFinish }, ref) => {
   const iLength = textLength;
+  const radomBaseCharsList = useMemo(() => {
+    return Array(textLength).fill(BASE_CHARS).map((array) => {
+      return shuffleString(array);
+    });
+  }, [textLength]);
+  
   const [inputText, setInputText] = useState(Array(textLength).fill(" ").join(""));
   const [spinning, setSpinning] = useState(false);
   const [reelPositions, setReelPositions] = useState<number[]>([]);
@@ -53,16 +69,17 @@ const SlotMachineComponent = React.forwardRef<
     }
 
     // Initialize character sets for each reel
-    const newCharSets = inputText.split("").map((char) => {
+    const newCharSets = inputText.split("").map((char, i) => {
+      const baseChars = radomBaseCharsList[i];
       // If the character is not in our base set, add it at a random position
-      if (BASE_CHARS.indexOf(char) === -1) {
+      if (baseChars.indexOf(char) === -1) {
         // Insert the character at a random position in the base set
-        const randomPos = Math.floor(Math.random() * BASE_CHARS.length);
+        const randomPos = Math.floor(Math.random() * baseChars.length);
         return (
-          BASE_CHARS.slice(0, randomPos) + char + BASE_CHARS.slice(randomPos)
+          baseChars.slice(0, randomPos) + char + baseChars.slice(randomPos)
         );
       }
-      return BASE_CHARS;
+      return baseChars;
     });
 
     // Generate random idle speeds for each reel
@@ -74,7 +91,7 @@ const SlotMachineComponent = React.forwardRef<
 
     setReelCharSets(newCharSets);
     setIdleSpeeds(newIdleSpeeds);
-  }, [iLength, inputText]);
+  }, [iLength, inputText, radomBaseCharsList]);
 
   // Apply idle animations to reels
 
@@ -228,7 +245,7 @@ const SlotMachineComponent = React.forwardRef<
   // Create the character list for a specific reel
   // This ensures a continuous loop of characters
   const getReelCharacters = (reelIndex: number) => {
-    if (reelIndex >= reelCharSets.length) return BASE_CHARS;
+    if (reelIndex >= reelCharSets.length) return radomBaseCharsList[reelIndex];
 
     const charSet = reelCharSets[reelIndex];
 
