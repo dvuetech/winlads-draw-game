@@ -7,7 +7,7 @@ import {
 } from "@/models/game-data.model";
 import EntryService from "@/services/EntryService";
 import GiveawayService from "@/services/GiveawayService";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
@@ -17,6 +17,7 @@ const GiveawayContext = createContext<{
   missingValues: string[];
   loadingEntries: boolean;
   giveawayLoading: boolean;
+  isUnauthorized: boolean;
   submitWinner: typeof submitWinner;
 }>({
   data: undefined,
@@ -24,6 +25,7 @@ const GiveawayContext = createContext<{
   missingValues: [],
   loadingEntries: true,
   giveawayLoading: true,
+  isUnauthorized: false,
   submitWinner: async () => false,
 });
 
@@ -151,6 +153,7 @@ export const GiveawayContextProvider = ({
     setUrlParams(extractedParams); // Set URL parameters in the state
   }, [searchParams]);
 
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   // Fetch giveaway and entries data when URL params are available
   useEffect(() => {
     const fetchGiveaway = async () => {
@@ -163,8 +166,12 @@ export const GiveawayContextProvider = ({
             urlParams.giveawayId
           );
           setGiveaway(response); // Store the fetched giveaway data
-        } catch (error) {
-          console.error("Error fetching giveaway:", error);
+        } catch (error: any) {
+          if (error.message === "401") {
+            setIsUnauthorized(true);
+          } else {
+            console.error("Error fetching giveaway:", error);
+          }
         } finally {
           setGiveawayLoading(false);
         }
@@ -219,18 +226,16 @@ export const GiveawayContextProvider = ({
       });
       const secondFormatted = entriesFormatted?.map((entry) => {
         let name = entry.name;
-        // Randomly add spaces to beginning and end of the name to make all names the same length. Must be random.
+        // Center the name by adding equal spaces to both sides
         const spacesToAdd = length - name.length;
 
         if (spacesToAdd > 0) {
-          // Randomly decide how many spaces to add to the beginning vs end
-          const spacesAtBeginning = Math.floor(
-            Math.random() * (spacesToAdd + 1)
-          );
-          const spacesAtEnd = spacesToAdd - spacesAtBeginning;
-
-          // Add the spaces
-          name = " ".repeat(spacesAtBeginning) + name + " ".repeat(spacesAtEnd);
+          // Calculate spaces for left and right sides
+          const spacesPerSide = Math.floor(spacesToAdd / 2);
+          const extraSpace = spacesToAdd % 2; // Handle odd number of spaces
+          
+          // Add equal spaces to both sides (plus extra space on the right if odd)
+          name = " ".repeat(spacesPerSide) + name + " ".repeat(spacesPerSide + extraSpace);
         }
 
         return {
@@ -256,6 +261,7 @@ export const GiveawayContextProvider = ({
         loadingEntries,
         giveawayLoading,
         submitWinner,
+        isUnauthorized,
       }}
     >
       {children}

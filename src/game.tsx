@@ -18,7 +18,7 @@ const DEFAULT_HEIGHT = 1920;
 const Game = () => {
   // State hooks for managing the game instance and data
   const [game, setGame] = useState<GameType>();
-  const { data, missingValues, loadingEntries, giveawayLoading } =
+  const { data, missingValues, loadingEntries, giveawayLoading, isUnauthorized } =
     useGiveawayContext();
 
   // Initialize the Phaser game instance once the data is available
@@ -61,6 +61,10 @@ const Game = () => {
       initPhaser();
     }
   }, [game, data]);
+
+  if (isUnauthorized) {
+    return <div>Unauthorized: Please launch the game again.</div>;
+  }
 
   // Render a message if URL parameters are missing
   if (missingValues.length) {

@@ -12,6 +12,7 @@ const SlotMachinePage = () => {
     giveawayLoading,
     loadingEntries,
     missingValues,
+    isUnauthorized,
   } = useGiveawayContext();
   const [giveawayEntries, setGiveawayEntries] = useState<
     EntryBalanceCombinedDto[]
@@ -62,6 +63,8 @@ const SlotMachinePage = () => {
   } else if (loadingEntries && giveawayLoading) {
     // Render a loading state if giveaway or entries data are still loading
     return <div>Loading...</div>;
+  } else if (isUnauthorized) {
+    return <div>Unauthorized: Please launch the game again.</div>;
   }
 
   return (
