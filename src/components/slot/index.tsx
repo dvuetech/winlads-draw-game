@@ -1,15 +1,22 @@
 "use client";
 
 import { GameDataAdmin } from "@/models/game-data.model";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import SlotMachineImage from "./SlotMachine";
 import SlotLiveStream from "./SlotLiveStream";
 import confetti from "canvas-confetti";
+import { shuffleArray } from "@/context/GiveawayContext";
 
 // Define base characters we'll use for the spinning reels
 // Including letters, numbers, and common punctuation
 const BASE_CHARS =
-  "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .,!?-_@#$%&*()[]{}:;'\"/\\<>+=~`^XYZ";
+  "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .XYZ";
 
 export interface SlotMachineComponentProps {
   textLength: number;
@@ -21,18 +28,36 @@ function randomNumber(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function shuffleString(str: string): string {
+  const array = str.split("");
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // swap elements
+  }
+  return array.join("");
+}
+
 const SlotMachineComponent = React.forwardRef<
   HTMLDivElement,
   SlotMachineComponentProps
 >(({ textLength, onSpin, onFinish }, ref) => {
   const iLength = textLength;
-  const [inputText, setInputText] = useState(Array(textLength).fill(" ").join(""));
+  const radomBaseCharsList = useMemo(() => {
+    return Array(textLength)
+      .fill(BASE_CHARS)
+      .map((array) => {
+        return shuffleString(array);
+      });
+  }, [textLength]);
+
+  const [inputText, setInputText] = useState(
+    Array(textLength).fill(" ").join("")
+  );
   const [spinning, setSpinning] = useState(false);
   const [reelPositions, setReelPositions] = useState<number[]>([]);
   const reelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [status, setStatus] = useState<"init" | "spinning" | "stopped">("init");
 
-  
   // Store custom character sets for each reel
   const [reelCharSets, setReelCharSets] = useState<string[]>([]);
 
@@ -53,16 +78,17 @@ const SlotMachineComponent = React.forwardRef<
     }
 
     // Initialize character sets for each reel
-    const newCharSets = inputText.split("").map((char) => {
+    const newCharSets = inputText.split("").map((char, i) => {
+      const baseChars = radomBaseCharsList[i] ?? BASE_CHARS;
       // If the character is not in our base set, add it at a random position
-      if (BASE_CHARS.indexOf(char) === -1) {
+      if (baseChars.indexOf(char) === -1) {
         // Insert the character at a random position in the base set
-        const randomPos = Math.floor(Math.random() * BASE_CHARS.length);
+        const randomPos = Math.floor(Math.random() * baseChars.length);
         return (
-          BASE_CHARS.slice(0, randomPos) + char + BASE_CHARS.slice(randomPos)
+          baseChars.slice(0, randomPos) + char + baseChars.slice(randomPos)
         );
       }
-      return BASE_CHARS;
+      return baseChars;
     });
 
     // Generate random idle speeds for each reel
@@ -74,7 +100,7 @@ const SlotMachineComponent = React.forwardRef<
 
     setReelCharSets(newCharSets);
     setIdleSpeeds(newIdleSpeeds);
-  }, [iLength, inputText]);
+  }, [iLength, inputText, radomBaseCharsList]);
 
   // Apply idle animations to reels
 
@@ -184,10 +210,7 @@ const SlotMachineComponent = React.forwardRef<
   };
 
   // Function to stop a specific reel at the target position
-  const stopReel = (
-    reelIndex: number,
-    finalPosition: number
-  ) => {
+  const stopReel = (reelIndex: number, finalPosition: number) => {
     console.log("stopReel", reelIndex, finalPosition);
     const reelElement = reelRefs.current[reelIndex];
     if (!reelElement) return;
@@ -228,7 +251,7 @@ const SlotMachineComponent = React.forwardRef<
   // Create the character list for a specific reel
   // This ensures a continuous loop of characters
   const getReelCharacters = (reelIndex: number) => {
-    if (reelIndex >= reelCharSets.length) return BASE_CHARS;
+    if (reelIndex >= reelCharSets.length) return radomBaseCharsList[reelIndex];
 
     const charSet = reelCharSets[reelIndex];
 
@@ -244,12 +267,12 @@ const SlotMachineComponent = React.forwardRef<
         <SlotLiveStream />
         <SlotMachineImage
           onClickDraw={() => {
-            if(status === "spinning") return;
+            if (status === "spinning") return;
             setTimeout(() => {
               const winnerName = onSpin();
               setInputText(winnerName);
               initSpin();
-              
+
               setTimeout(() => {
                 spin(winnerName);
               }, 500);
@@ -261,80 +284,97 @@ const SlotMachineComponent = React.forwardRef<
               className="flex mb-6 overflow-x-auto absolute"
               style={{ maxWidth: "100vw", top: "-20px" }}
             >
-              {Array(iLength).fill(" ").map((_, reelIndex) => {
-                const width = Math.floor(590 / iLength);
-                const fontSize = getFontSize(iLength);
-                return (
-                  <div
-                    key={reelIndex}
-                    className="relative w-20 h-60 border border-gray-300 overflow-hidden bg-white flex-shrink-0"
-                    style={{ width: `${width}px` }}
-                  >
-                    {/* Visible window indicator */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-full h-[60px] border-y-2 border-red-500" />
-                    </div>
-
-                    {/* The actual spinning reel */}
+              {Array(iLength)
+                .fill(" ")
+                .map((_, reelIndex) => {
+                  const width = Math.floor(610 / iLength);
+                  const fontSize = getFontSize(iLength);
+                  return (
                     <div
-                      ref={(el) => {
-                        // Store the ref and immediately apply idle animation if not spun
-                        reelRefs.current[reelIndex] = el;
-                        if (el && !hasSpun) {
-                          // Remove any existing animations
-                          el.classList.remove("reel-spinning");
-                          for (let i = 0; i < iLength; i++) {
-                            el.classList.remove(`reel-idle-${i}`);
-                          }
-                          // Add idle animation immediately
-                          el.classList.add(`reel-idle-${reelIndex}`);
-                        }
-                      }}
-                      style={{
-                        position: "absolute",
-                        // Adjust top position to account for the extra character at the beginning
-                        top: "calc(50% - 30px - 60px)", // Move up by one character height
-                        width: "100%",
-                        transform: hasSpun
-                          ? `translateY(${reelPositions[reelIndex] || 0}px)`
-                          : "translateY(60px)", // Start at A if not spun yet
-                      }}
-                      className={`reel-container `}
+                      key={reelIndex}
+                      className="relative h-60 border border-gray-300 overflow-hidden bg-white flex-shrink-0"
+                      style={{ width: `${width}px` }}
                     >
-                      {/* Circular character set with last char at beginning and end */}
-                      {getReelCharacters(reelIndex)
-                        .split("")
-                        .map((letter, index) => {
-                          const isWinningText =
-                            inputText?.charAt(reelIndex) === letter;
-                          return (
-                            <div
-                              key={index}
-                              className="h-[60px] flex items-center justify-center text-4xl "
-                              style={{
-                                fontSize: `${fontSize}px`,
-                              }}
-                            >
-                              {letter === " " ? (
-                                <span className="w-4 h-4 rounded-full"></span>
-                              ) : (
-                                <span
-                                  className={
-                                    status === "stopped" && isWinningText
-                                      ? "selected-character"
-                                      : ""
-                                  }
-                                >
-                                  {letter}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                      {/* Top shade overlay */}
+                      <div
+                        className="absolute top-0 left-0 right-0 bottom-1/2  z-30 pointer-events-none"
+                        style={{ bottom: "calc(50% + 30px)" }}
+                      ></div>
+
+                      {/* Bottom shade overlay */}
+                      <div
+                        className="absolute top-1/2 left-0 right-0 bottom-0  z-30 pointer-events-none"
+                        style={{ top: "calc(50% + 30px)" }}
+                      ></div>
+                      {/* Visible window indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-full h-[60px] border-y-2 border-red-500" />
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                        <div className="w-full h-[60px] bg-gradient-to-r from-transparent via-yellow-100/20 to-transparent" />
+                      </div>
+                      {/* The actual spinning reel */}
+                      <div
+                        ref={(el) => {
+                          // Store the ref and immediately apply idle animation if not spun
+                          reelRefs.current[reelIndex] = el;
+                          if (el && !hasSpun) {
+                            // Remove any existing animations
+                            el.classList.remove("reel-spinning");
+                            for (let i = 0; i < iLength; i++) {
+                              el.classList.remove(`reel-idle-${i}`);
+                            }
+                            // Add idle animation immediately
+                            el.classList.add(`reel-idle-${reelIndex}`);
+                          }
+                        }}
+                        style={{
+                          position: "absolute",
+                          // Adjust top position to account for the extra character at the beginning
+                          top: "calc(50% - 30px - 60px)", // Move up by one character height
+                          width: "100%",
+                          transform: hasSpun
+                            ? `translateY(${reelPositions[reelIndex] || 0}px)`
+                            : "translateY(60px)", // Start at A if not spun yet
+                        }}
+                        className={`reel-container `}
+                      >
+                        {/* Circular character set with last char at beginning and end */}
+                        {getReelCharacters(reelIndex)
+                          .split("")
+                          .map((letter, index) => {
+                            const isWinningText =
+                              inputText?.charAt(reelIndex) === letter;
+                            return (
+                              <div
+                                key={index}
+                                className="h-[60px] flex items-center justify-center text-4xl "
+                                style={{
+                                  fontSize: `${fontSize}px`,
+                                }}
+                              >
+                                {letter === " " ? (
+                                  <span className="w-4 h-4 rounded-full"></span>
+                                ) : (
+                                  <span
+                                    className={
+                                      isWinningText
+                                        ? status === "stopped"
+                                          ? "selected-character font-black"
+                                          : "text-[#000000] font-black"
+                                        : "text-[#747474] font-medium"
+                                    }
+                                  >
+                                    {letter}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
             <style jsx global>{`
               /* Main spinning animation - slower speed */
@@ -452,6 +492,6 @@ const getFontSize = (iLength: number) => {
     case 8:
       return 70;
     default:
-      return Math.floor(590 / iLength);
+      return Math.floor(600 / iLength);
   }
 };

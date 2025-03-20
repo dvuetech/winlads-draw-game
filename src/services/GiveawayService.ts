@@ -18,7 +18,7 @@ class GiveawayService {
             });
       
             if (!response.ok) {
-              throw new Error(`Failed to fetch giveaway details. Status: ${response.status}`);
+              throw new Error(response.status as any);
             }
       
             const data = await response.json();

@@ -12,6 +12,7 @@ const SlotMachinePage = () => {
     giveawayLoading,
     loadingEntries,
     missingValues,
+    isUnauthorized,
   } = useGiveawayContext();
   const [giveawayEntries, setGiveawayEntries] = useState<
     EntryBalanceCombinedDto[]
@@ -30,7 +31,9 @@ const SlotMachinePage = () => {
       giveawayEntries ?? [],
       winners
     );
-    const entry = giveawayEntries.find((e) => e.userId === winner);
+    
+    const entry = newGiveawayEntries.find((e) => e.userId === winner);
+    console.log(entry);
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
       setLatestWinner(entry);
@@ -60,6 +63,8 @@ const SlotMachinePage = () => {
   } else if (loadingEntries && giveawayLoading) {
     // Render a loading state if giveaway or entries data are still loading
     return <div>Loading...</div>;
+  } else if (isUnauthorized) {
+    return <div>Unauthorized: Please launch the game again.</div>;
   }
 
   return (
