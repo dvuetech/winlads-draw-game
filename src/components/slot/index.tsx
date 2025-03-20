@@ -1,6 +1,5 @@
 "use client";
 
-import { GameDataAdmin } from "@/models/game-data.model";
 import React, {
   useCallback,
   useEffect,
@@ -11,12 +10,11 @@ import React, {
 import SlotMachineImage from "./SlotMachine";
 import SlotLiveStream from "./SlotLiveStream";
 import confetti from "canvas-confetti";
-import { shuffleArray } from "@/context/GiveawayContext";
+import TextUtil from "@/util/TextUtil";
 
 // Define base characters we'll use for the spinning reels
 // Including letters, numbers, and common punctuation
-const BASE_CHARS =
-  "ABCDEFGHIJKLMNOPQRSTUVW0123456789 .XYZ";
+const BASE_CHARS = "ABCDEFGHIJKLMNOPQRS TUVWXYZ";
 
 export interface SlotMachineComponentProps {
   textLength: number;
@@ -61,12 +59,15 @@ const SlotMachineComponent = React.forwardRef<
   // Store custom character sets for each reel
   const [reelCharSets, setReelCharSets] = useState<string[]>([]);
 
+  // Store the target character indices for each reel
+  const [targetCharIndices, setTargetCharIndices] = useState<number[]>([]);
+
   // Track if the spin button has been clicked
   const [hasSpun, setHasSpun] = useState(false);
 
   // Store idle animation speeds for each reel
   const [idleSpeeds, setIdleSpeeds] = useState<number[]>([]);
-
+  console.log(inputText);
   // Update reel count and character sets when input text changes
   useEffect(() => {
     // Reset positions to show "A" for all reels when input changes
@@ -77,18 +78,42 @@ const SlotMachineComponent = React.forwardRef<
       reelRefs.current = new Array(iLength).fill(null);
     }
 
-    // Initialize character sets for each reel
-    const newCharSets = inputText.split("").map((char, i) => {
+    // Initialize character sets and target indices for each reel
+    const newCharSets: string[] = [];
+    const newTargetIndices: number[] = [];
+
+    TextUtil.splitText(inputText).forEach((char, i) => {
       const baseChars = radomBaseCharsList[i] ?? BASE_CHARS;
-      // If the character is not in our base set, add it at a random position
-      if (baseChars.indexOf(char) === -1) {
-        // Insert the character at a random position in the base set
-        const randomPos = Math.floor(Math.random() * baseChars.length);
-        return (
-          baseChars.slice(0, randomPos) + char + baseChars.slice(randomPos)
+
+      // Check if the character exists in the base character set
+      const charIndex = baseChars.indexOf(char);
+
+      if (charIndex === -1 && char !== " ") {
+        // Character not in base set, create a custom character set
+        // Insert the character at a fixed position (middle) for predictability
+        const middlePos = Math.floor(baseChars.length / 2);
+        const customCharSet =
+          baseChars.slice(0, middlePos) + char + baseChars.slice(middlePos);
+
+        // Store the character set and the index of the target character
+        newCharSets.push(customCharSet);
+        newTargetIndices.push(middlePos);
+
+        console.log(
+          `Custom char: ${char}, Index: ${middlePos}, Set: ${customCharSet.substring(
+            0,
+            10
+          )}...`
+        );
+      } else {
+        // Character exists in base set or is a space
+        newCharSets.push(baseChars);
+        newTargetIndices.push(charIndex === -1 ? 0 : charIndex); // Use 0 for space (usually first character)
+
+        console.log(
+          `Standard char: ${char}, Index: ${charIndex === -1 ? 0 : charIndex}`
         );
       }
-      return baseChars;
     });
 
     // Generate random idle speeds for each reel
@@ -99,11 +124,11 @@ const SlotMachineComponent = React.forwardRef<
     );
 
     setReelCharSets(newCharSets);
+    setTargetCharIndices(newTargetIndices);
     setIdleSpeeds(newIdleSpeeds);
   }, [iLength, inputText, radomBaseCharsList]);
 
   // Apply idle animations to reels
-
   const initSpin = useCallback(() => {
     // Skip if we've already spun or there's no input
     if (hasSpun || iLength === 0) return;
@@ -135,6 +160,7 @@ const SlotMachineComponent = React.forwardRef<
     setSpinning(true);
     setHasSpun(true);
     setStatus("spinning");
+
     // Start the spinning animation on all reels
     reelRefs.current.forEach((reel, index) => {
       if (reel) {
@@ -146,14 +172,48 @@ const SlotMachineComponent = React.forwardRef<
       }
     });
 
-    // Calculate the exact positions for each character in the input text
-    const targetPositions = winnerName.split("").map((char, index) => {
+    // Update target indices for the winner name
+    const newTargetIndices: number[] = [];
+    const newCharSets: string[] = [...reelCharSets];
+
+    winnerName.split("").forEach((char, index) => {
       // Get the character set for this specific reel
       const charSet = reelCharSets[index];
 
       // Find the position of the character in the character set
-      const charIndex = charSet.indexOf(char);
+      let charIndex = charSet.indexOf(char);
 
+      // If character not found, add it to the character set
+      if (charIndex === -1 && char !== " ") {
+        // Insert the character at a fixed position (middle) for predictability
+        const middlePos = Math.floor(charSet.length / 2);
+        const customCharSet =
+          charSet.slice(0, middlePos) + char + charSet.slice(middlePos);
+
+        // Update the character set and use the middle position
+        newCharSets[index] = customCharSet;
+        charIndex = middlePos;
+
+        console.log(
+          `Spin: Custom char: ${char}, Index: ${charIndex}, Set: ${customCharSet.substring(
+            0,
+            10
+          )}...`
+        );
+      } else if (charIndex === -1) {
+        // Handle space character
+        charIndex = 0; // Usually space is the first character
+      }
+
+      newTargetIndices.push(charIndex);
+    });
+
+    // Update state with new character sets and target indices
+    setReelCharSets(newCharSets);
+    setTargetCharIndices(newTargetIndices);
+
+    // Calculate the exact positions for each character
+    const targetPositions = newTargetIndices.map((charIndex) => {
       // Return the position (each character is 60px high)
       return -charIndex * 60;
     });
@@ -269,7 +329,7 @@ const SlotMachineComponent = React.forwardRef<
           onClickDraw={() => {
             if (status === "spinning") return;
             setTimeout(() => {
-              const winnerName = onSpin();
+              let winnerName = onSpin();
               setInputText(winnerName);
               initSpin();
 
