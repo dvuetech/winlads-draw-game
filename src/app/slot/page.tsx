@@ -3,7 +3,7 @@
 import SlotMachineComponent from "@/components/slot";
 import { chooseWinner, useGiveawayContext } from "@/context/GiveawayContext";
 import { EntryBalanceCombinedDto } from "@/models/game-data.model";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SlotMachinePage = () => {
   const {
@@ -31,27 +31,38 @@ const SlotMachinePage = () => {
       giveawayEntries ?? [],
       winners
     );
-    
+
     const entry = newGiveawayEntries.find((e) => e.userId === winner);
     console.log(entry);
     setGiveawayEntries(newGiveawayEntries);
     if (entry) {
       setLatestWinner(entry);
     }
-    return entry?.name ?? Array(dataFormatted?.maxNameLength ?? 1).fill(" ").join("");
+    return (
+      entry?.name ??
+      Array(dataFormatted?.maxNameLength ?? 1)
+        .fill(" ")
+        .join("")
+    );
   }, [dataFormatted, giveawayEntries, winners]);
+  // Store the entry in a ref to ensure we have access to it in onFinish
+  const currentEntryRef = useRef<EntryBalanceCombinedDto | undefined>();
 
-  const onFinish = useCallback(
-    () => {
-      if (latestWinner) {
-        setWinners((prev) => [...prev, latestWinner]);
-        submitWinner(dataFormatted!, latestWinner).then(() => {
-          setLatestWinner(undefined);
-        });
-      }
-    },
-    [dataFormatted, latestWinner, submitWinner],
-  )
+  console.log({ latestWinner });
+  const onFinish = useCallback(() => {
+    const latestWinner = currentEntryRef.current;
+    if (latestWinner) {
+      setWinners((prev) => [...prev, latestWinner]);
+      submitWinner(dataFormatted!, latestWinner).then(() => {
+        setLatestWinner(undefined);
+      });
+    }
+  }, [dataFormatted, submitWinner]);
+
+  // Update the ref when setting latest winner
+  useEffect(() => {
+    currentEntryRef.current = latestWinner;
+  }, [latestWinner]);
 
   const textLength = useMemo(
     () => dataFormatted?.maxNameLength ?? 0,
@@ -72,7 +83,7 @@ const SlotMachinePage = () => {
       key={textLength}
       textLength={textLength}
       onSpin={onSpin}
-      onFinish={onFinish}
+      onFinish={() => onFinish()}
     />
   );
 };

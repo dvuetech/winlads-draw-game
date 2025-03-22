@@ -1,5 +1,5 @@
 "use client";
-import './index.css';
+import "./index.css";
 
 import React, {
   useCallback,
@@ -68,7 +68,6 @@ const SlotMachineComponent = React.forwardRef<
 
   // Store idle animation speeds for each reel
   const [idleSpeeds, setIdleSpeeds] = useState<number[]>([]);
-  console.log(inputText);
   // Update reel count and character sets when input text changes
   useEffect(() => {
     // Reset positions to show "A" for all reels when input changes
@@ -110,10 +109,6 @@ const SlotMachineComponent = React.forwardRef<
         // Character exists in base set or is a space
         newCharSets.push(baseChars);
         newTargetIndices.push(charIndex === -1 ? 0 : charIndex); // Use 0 for space (usually first character)
-
-        console.log(
-          `Standard char: ${char}, Index: ${charIndex === -1 ? 0 : charIndex}`
-        );
       }
     });
 
@@ -270,45 +265,43 @@ const SlotMachineComponent = React.forwardRef<
     }, 6000);
   };
 
-  console.log(reelCharSets);
   // Function to stop a specific reel at the target position
-  const stopReel = (reelIndex: number, finalPosition: number) => {
-    console.log("stopReel", reelIndex, finalPosition);
-    const reelElement = reelRefs.current[reelIndex];
-    if (!reelElement) return;
+  const stopReel = useCallback(
+    (reelIndex: number, finalPosition: number) => {
+      const reelElement = reelRefs.current[reelIndex];
+      if (!reelElement) return;
 
-    // Stop the spinning animation
-    reelElement.classList.remove("reel-spinning");
+      // Stop the spinning animation
+      reelElement.classList.remove("reel-spinning");
 
-    // Set transition for smooth stopping
-    reelElement.style.transition = "transform 0.5s ease-out";
+      // Set transition for smooth stopping
+      reelElement.style.transition = "transform 0.5s ease-out";
 
-    // Set the final position
-    reelElement.style.transform = `translateY(${finalPosition}px)`;
+      // Set the final position
+      reelElement.style.transform = `translateY(${finalPosition}px)`;
 
-    // Log for debugging
-    console.log(`Stopping reel ${reelIndex} at position ${finalPosition}`);
+      // Update the position in state
+      setReelPositions((prev) => {
+        const newPositions = [...prev];
+        newPositions[reelIndex] = finalPosition;
+        return newPositions;
+      });
 
-    // Update the position in state
-    setReelPositions((prev) => {
-      const newPositions = [...prev];
-      newPositions[reelIndex] = finalPosition;
-      return newPositions;
-    });
-
-    // Check if this is the last reel
-    if (reelIndex === iLength - 1) {
-      // Set spinning to false after a short delay
-      setTimeout(() => {
-        setStatus("stopped");
-        setSpinning(false);
-        showConfetti();
-        onFinish();
-        playWinningMusic();
-        // We do NOT restart idle animations after spinning is complete
-      }, 500);
-    }
-  };
+      // Check if this is the last reel
+      if (reelIndex === iLength - 1) {
+        // Set spinning to false after a short delay
+        setTimeout(() => {
+          setStatus("stopped");
+          setSpinning(false);
+          showConfetti();
+          onFinish();
+          playWinningMusic();
+          // We do NOT restart idle animations after spinning is complete
+        }, 500);
+      }
+    },
+    [iLength, onFinish]
+  );
 
   // Create the character list for a specific reel
   // This ensures a continuous loop of characters
@@ -320,7 +313,7 @@ const SlotMachineComponent = React.forwardRef<
     // Create a circular list with the last character at the beginning
     // This ensures there's always a character visible above the first one
     let lastChar = charSet.charAt(charSet.length - 1);
-    if(winningChar === lastChar) {
+    if (winningChar === lastChar) {
       lastChar = charSet.charAt(charSet.length - 2);
     }
     return lastChar + charSet + lastChar;
@@ -405,7 +398,10 @@ const SlotMachineComponent = React.forwardRef<
                         className={`reel-container `}
                       >
                         {/* Circular character set with last char at beginning and end */}
-                        {getReelCharacters(reelIndex, inputText?.charAt(reelIndex))
+                        {getReelCharacters(
+                          reelIndex,
+                          inputText?.charAt(reelIndex)
+                        )
                           .split("")
                           .map((letter, index) => {
                             const isWinningText =
