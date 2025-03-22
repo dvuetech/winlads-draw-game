@@ -1,0 +1,17 @@
+:root {
+    --moving-character-color: #747474;
+}
+
+.text-moving-character-color {
+    color: var(--moving-character-color);
+}
+
+.moving-character {
+    color: var(--moving-character-color)!important;
+}
+
+.reel-spinning * {
+    color: var(--moving-character-color)!important;
+    /* font-weight: normal!important; */
+}
+
