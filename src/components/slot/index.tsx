@@ -1,4 +1,5 @@
 "use client";
+import './index.css';
 
 import React, {
   useCallback,
@@ -269,6 +270,7 @@ const SlotMachineComponent = React.forwardRef<
     }, 6000);
   };
 
+  console.log(reelCharSets);
   // Function to stop a specific reel at the target position
   const stopReel = (reelIndex: number, finalPosition: number) => {
     console.log("stopReel", reelIndex, finalPosition);
@@ -310,14 +312,17 @@ const SlotMachineComponent = React.forwardRef<
 
   // Create the character list for a specific reel
   // This ensures a continuous loop of characters
-  const getReelCharacters = (reelIndex: number) => {
+  const getReelCharacters = (reelIndex: number, winningChar: string) => {
     if (reelIndex >= reelCharSets.length) return radomBaseCharsList[reelIndex];
 
     const charSet = reelCharSets[reelIndex];
 
     // Create a circular list with the last character at the beginning
     // This ensures there's always a character visible above the first one
-    const lastChar = charSet.charAt(charSet.length - 1);
+    let lastChar = charSet.charAt(charSet.length - 1);
+    if(winningChar === lastChar) {
+      lastChar = charSet.charAt(charSet.length - 2);
+    }
     return lastChar + charSet + lastChar;
   };
 
@@ -400,7 +405,7 @@ const SlotMachineComponent = React.forwardRef<
                         className={`reel-container `}
                       >
                         {/* Circular character set with last char at beginning and end */}
-                        {getReelCharacters(reelIndex)
+                        {getReelCharacters(reelIndex, inputText?.charAt(reelIndex))
                           .split("")
                           .map((letter, index) => {
                             const isWinningText =
@@ -420,9 +425,9 @@ const SlotMachineComponent = React.forwardRef<
                                     className={
                                       isWinningText
                                         ? status === "stopped"
-                                          ? "selected-character font-black"
-                                          : "text-[#000000] font-black"
-                                        : "text-[#747474] font-medium"
+                                          ? "selected-character font-black" // won but stopped
+                                          : "text-[#000000] font-black" // won and spinning
+                                        : "text-[var(--moving-character-color)] font-black" // regular text
                                     }
                                   >
                                     {letter}
@@ -471,6 +476,9 @@ const SlotMachineComponent = React.forwardRef<
             
             .reel-idle-${index} {
               animation: idle-spin-${index} ${duration}s linear infinite;
+            }
+            .reel-idle-${index} * {
+              color: var(--moving-character-color)!important;
             }
             @keyframes pulse {
               0%, 100% { transform: scale(1); }
