@@ -110,7 +110,6 @@ The system will validate the parameters and fetch the required data to initializ
 ### Key Features of the Winner Selection Process
 
 - Weighted Randomness: Participants with more points have a higher chance of being selected, and their participation is based on a transparent, fair, and auditable system.
-- Exclusion of Previous Winners: Previous winners are excluded to ensure fairness and prevent any participant from winning multiple times in a single draw.
 - Dynamic Point Management: After each draw, the points are updated, ensuring that each participant's chances are managed fairly for future draws.
 - Randomness with Integrity: The shuffling process and random index selection ensure unbiased outcomes. To further enhance fairness, a cryptographic RNG can be integrated to achieve a higher level of security and randomness.
 - Transparency and Auditability: Logs, hashes, and other forms of verification can be provided to prove the fairness of the draw and allow anyone to review the process for integrity.
