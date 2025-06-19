@@ -325,7 +325,12 @@ const SlotMachineComponent = React.forwardRef<
         <SlotLiveStream />
         <SlotMachineImage
           onClickDraw={() => {
-            if (status === "spinning") return;
+            // Prevent multiple draws if already spinning or processing
+            if (spinning) return;
+
+            // Set spinning immediately to prevent multiple clicks
+            setSpinning(true);
+
             setTimeout(() => {
               let winnerName = onSpin();
               setInputText(winnerName);
